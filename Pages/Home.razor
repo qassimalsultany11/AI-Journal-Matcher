@@ -1,36 +1,145 @@
 ﻿@page "/"
 @inject HttpClient Http
 
-<PageTitle>اختبار الاتصال</PageTitle>
-
-<h1>🔌 اختبار الاتصال بـ Supabase (عبر HttpClient)</h1>
+<PageTitle>لوحة التحكم | AI Journal Matcher</PageTitle>
 
 @if (isLoading)
 {
-    <p>⏳ جاري الاتصال بقاعدة البيانات...</p>
+    <div class="text-center mt-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">جاري تحميل البيانات...</p>
+    </div>
 }
 else if (errorMessage != null)
 {
-    <div style="color: red; padding: 20px; border: 1px solid red; border-radius: 8px; background-color: #ffe6e6;">
-        <h3>❌ فشل الاتصال</h3>
-        <p>@errorMessage</p>
-    </div>
+    <div class="alert alert-danger">@errorMessage</div>
 }
 else
 {
-    <div style="color: green; padding: 20px; border: 1px solid green; border-radius: 8px; background-color: #e6ffe6;">
-        <h3>✅ تم الاتصال بنجاح!</h3>
-        <p>رابط السحابة: https://dayowfmmqtoyewjgnptf.supabase.co</p>
-        <p>عدد المستخدمين المقروءين من جدول users: <strong>@usersCount</strong></p>
+    <!-- الترحيب -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold m-0">مرحباً، قاسم موسى!</h2>
+            <p class="text-muted m-0">نظرة عامة على المجلات الأكاديمية وإحصائيات النظام</p>
+        </div>
+        <button class="btn btn-outline-secondary rounded-pill px-4">
+            <i class="bi bi-arrow-clockwise"></i> تحديث
+        </button>
+    </div>
+
+    <!-- الكروت الإحصائية -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card stat-card">
+                <div>
+                    <p class="text-muted mb-1">إجمالي المجلات</p>
+                    <h3 class="fw-bold m-0">@journalsCount</h3>
+                </div>
+                <div class="stat-icon" style="background: #e0e7ff; color: #4f46e5;">
+                    <i class="bi bi-journal-text"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card">
+                <div>
+                    <p class="text-muted mb-1">الباحثون</p>
+                    <h3 class="fw-bold m-0">0</h3>
+                </div>
+                <div class="stat-icon" style="background: #dcfce7; color: #10b981;">
+                    <i class="bi bi-people"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card">
+                <div>
+                    <p class="text-muted mb-1">جلسات المطابقة</p>
+                    <h3 class="fw-bold m-0">0</h3>
+                </div>
+                <div class="stat-icon" style="background: #fef3c7; color: #d97706;">
+                    <i class="bi bi-lightning-charge"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card">
+                <div>
+                    <p class="text-muted mb-1">دقة النظام</p>
+                    <h3 class="fw-bold m-0">99.2%</h3>
+                </div>
+                <div class="stat-icon" style="background: #fce7f3; color: #db2777;">
+                    <i class="bi bi-graph-up-arrow"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- أزرار الإجراءات السريعة -->
+    <div class="card mb-4">
+        <h5 class="fw-bold mb-3"><i class="bi bi-lightning-fill text-warning"></i> إجراءات سريعة</h5>
+        <div class="row text-center">
+            <div class="col-md-3">
+                <button class="btn w-100 py-3" style="background: #e0e7ff; color: #4f46e5; border-radius: 12px;">
+                    <i class="bi bi-list-task d-block fs-3 mb-2"></i> إدارة المجلات
+                </button>
+            </div>
+            <div class="col-md-3">
+                <button class="btn w-100 py-3" style="background: #dcfce7; color: #10b981; border-radius: 12px;">
+                    <i class="bi bi-search d-block fs-3 mb-2"></i> المطابقة الذكية
+                </button>
+            </div>
+            <div class="col-md-3">
+                <button class="btn w-100 py-3" style="background: #fef3c7; color: #d97706; border-radius: 12px;">
+                    <i class="bi bi-plus-lg d-block fs-3 mb-2"></i> إضافة مجلة
+                </button>
+            </div>
+            <div class="col-md-3">
+                <button class="btn w-100 py-3" style="background: #fce7f3; color: #db2777; border-radius: 12px;">
+                    <i class="bi bi-gear d-block fs-3 mb-2"></i> الإعدادات
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- جدول أحدث المجلات -->
+    <div class="card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold m-0"><i class="bi bi-clock-history"></i> أحدث المجلات</h5>
+            <a href="#" class="text-decoration-none">عرض الكل &larr;</a>
+        </div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>اسم المجلة</th>
+                    <th>الناشر</th>
+                    <th>الدولة</th>
+                    <th>الربع</th>
+                    <th>التأثير</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var journal in journals)
+                {
+                    <tr>
+                        <td class="fw-bold">@journal.Title</td>
+                        <td class="text-muted">@journal.Publisher</td>
+                        <td class="text-muted">@journal.Country</td>
+                        <td><span class="badge bg-primary">@journal.Quartile</span></td>
+                        <td class="fw-bold">@journal.ImpactFactor</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     </div>
 }
 
 @code {
     private bool isLoading = true;
     private string? errorMessage;
-    private int usersCount = 0;
+    private int journalsCount = 0;
+    private List<Journal> journals = new();
 
-    // نفس القيم المستخدمة في مشروع WPF الخاص بك
     private string supabaseUrl = "https://dayowfmmqtoyewjgnptf.supabase.co";
     private string supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRheW93Zm1tcXRveWV3amducHRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwMTI4MTcsImV4cCI6MjEwNjU4ODgxN30.IcR-HI9AZOdsWyg93PURcm3riWzqzd7r0v69P0pzNTc";
 
@@ -38,43 +147,48 @@ else
     {
         try
         {
-            // 1. تجهيز الطلب (نطلب فقط الـ id ليكون الطلب خفيفاً وسريعاً)
-            var request = new HttpRequestMessage(HttpMethod.Get, $"{supabaseUrl}/rest/v1/users?select=id");
+            // جلب عدد المجلات
+            var reqCount = new HttpRequestMessage(HttpMethod.Get, $"{supabaseUrl}/rest/v1/journals?select=id");
+            reqCount.Headers.Add("apikey", supabaseKey);
+            reqCount.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
+            var resCount = await Http.SendAsync(reqCount);
 
-            // 2. إضافة المفاتيح في الهيدر (تماماً كما فعلت في AuthService.cs في WPF)
-            request.Headers.Add("apikey", supabaseKey);
-            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
-
-            // 3. إرسال الطلب
-            var response = await Http.SendAsync(request);
-
-            // 4. التحقق من النتيجة
-            if (response.IsSuccessStatusCode)
+            if (resCount.IsSuccessStatusCode)
             {
-                var json = await response.Content.ReadAsStringAsync();
-
-                // قراءة عدد المستخدمين من الـ JSON
-                using var doc = System.Text.Json.JsonDocument.Parse(json);
-                usersCount = doc.RootElement.GetArrayLength();
-
-                isLoading = false;
+                var jsonCount = await resCount.Content.ReadAsStringAsync();
+                using var doc = System.Text.Json.JsonDocument.Parse(jsonCount);
+                journalsCount = doc.RootElement.GetArrayLength();
             }
-            else
+
+            // جلب أحدث 5 مجلات (على افتراض أن لديك أعمدة بهذه الأسماء في Supabase)
+            var reqJournals = new HttpRequestMessage(HttpMethod.Get, $"{supabaseUrl}/rest/v1/journals?select=*&limit=5");
+            reqJournals.Headers.Add("apikey", supabaseKey);
+            reqJournals.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
+            var resJournals = await Http.SendAsync(reqJournals);
+
+            if (resJournals.IsSuccessStatusCode)
             {
-                isLoading = false;
-                var errBody = await response.Content.ReadAsStringAsync();
-                errorMessage = $"خطأ من السيرفر (HTTP {response.StatusCode}): {errBody}";
+                var jsonJournals = await resJournals.Content.ReadAsStringAsync();
+                // ملاحظة: تأكد من أن أسماء الخصائص هنا تطابق أسماء الأعمدة في قاعدة البيانات
+                journals = System.Text.Json.JsonSerializer.Deserialize<List<Journal>>(jsonJournals, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
             }
+
+            isLoading = false;
         }
         catch (Exception ex)
         {
             isLoading = false;
-            // هذا السطر سيطبع لك المشكلة الدقيقة إذا حدث خطأ
             errorMessage = $"حدث خطأ: {ex.Message}";
-            if (ex.InnerException != null)
-            {
-                errorMessage += $" | التفاصيل: {ex.InnerException.Message}";
-            }
         }
+    }
+
+    // كلاس يمثل بيانات المجلة (يجب أن يطابق أعمدة جدول journals في Supabase)
+    public class Journal
+    {
+        public string Title { get; set; } = "";
+        public string Publisher { get; set; } = "";
+        public string Country { get; set; } = "";
+        public string Quartile { get; set; } = "";
+        public double ImpactFactor { get; set; }
     }
 }
