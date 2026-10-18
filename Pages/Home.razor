@@ -1,0 +1,80 @@
+﻿@page "/"
+@inject HttpClient Http
+
+<PageTitle>اختبار الاتصال</PageTitle>
+
+<h1>🔌 اختبار الاتصال بـ Supabase (عبر HttpClient)</h1>
+
+@if (isLoading)
+{
+    <p>⏳ جاري الاتصال بقاعدة البيانات...</p>
+}
+else if (errorMessage != null)
+{
+    <div style="color: red; padding: 20px; border: 1px solid red; border-radius: 8px; background-color: #ffe6e6;">
+        <h3>❌ فشل الاتصال</h3>
+        <p>@errorMessage</p>
+    </div>
+}
+else
+{
+    <div style="color: green; padding: 20px; border: 1px solid green; border-radius: 8px; background-color: #e6ffe6;">
+        <h3>✅ تم الاتصال بنجاح!</h3>
+        <p>رابط السحابة: https://dayowfmmqtoyewjgnptf.supabase.co</p>
+        <p>عدد المستخدمين المقروءين من جدول users: <strong>@usersCount</strong></p>
+    </div>
+}
+
+@code {
+    private bool isLoading = true;
+    private string? errorMessage;
+    private int usersCount = 0;
+
+    // نفس القيم المستخدمة في مشروع WPF الخاص بك
+    private string supabaseUrl = "https://dayowfmmqtoyewjgnptf.supabase.co";
+    private string supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRheW93Zm1tcXRveWV3amducHRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwMTI4MTcsImV4cCI6MjEwNjU4ODgxN30.IcR-HI9AZOdsWyg93PURcm3riWzqzd7r0v69P0pzNTc";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // 1. تجهيز الطلب (نطلب فقط الـ id ليكون الطلب خفيفاً وسريعاً)
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{supabaseUrl}/rest/v1/users?select=id");
+
+            // 2. إضافة المفاتيح في الهيدر (تماماً كما فعلت في AuthService.cs في WPF)
+            request.Headers.Add("apikey", supabaseKey);
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
+
+            // 3. إرسال الطلب
+            var response = await Http.SendAsync(request);
+
+            // 4. التحقق من النتيجة
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+
+                // قراءة عدد المستخدمين من الـ JSON
+                using var doc = System.Text.Json.JsonDocument.Parse(json);
+                usersCount = doc.RootElement.GetArrayLength();
+
+                isLoading = false;
+            }
+            else
+            {
+                isLoading = false;
+                var errBody = await response.Content.ReadAsStringAsync();
+                errorMessage = $"خطأ من السيرفر (HTTP {response.StatusCode}): {errBody}";
+            }
+        }
+        catch (Exception ex)
+        {
+            isLoading = false;
+            // هذا السطر سيطبع لك المشكلة الدقيقة إذا حدث خطأ
+            errorMessage = $"حدث خطأ: {ex.Message}";
+            if (ex.InnerException != null)
+            {
+                errorMessage += $" | التفاصيل: {ex.InnerException.Message}";
+            }
+        }
+    }
+}

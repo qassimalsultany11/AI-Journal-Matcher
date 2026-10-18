@@ -1,0 +1,117 @@
+﻿@page "/weather"
+@using System.Net.Http.Json
+
+<PageTitle>الطقس</PageTitle>
+
+<div class="container mt-4">
+    <div class="text-center mb-5">
+        <h1 class="display-5 fw-bold text-primary">🌤️ حالة الطقس</h1>
+        <p class="lead text-muted">توقعات الطقس لمدة 5 أيام</p>
+    </div>
+
+    @if (forecasts == null)
+    {
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">جاري التحميل...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-5 g-4">
+            @foreach (var forecast in forecasts)
+            {
+                <div class="col">
+                    <div class="card h-100 shadow-sm border-0 weather-card">
+                        <div class="card-body text-center">
+                            <!-- أيقونة الطقس (تعتمد على الحالة) -->
+                            <div class="weather-icon mb-3">
+                                @if (forecast.Summary.Contains("Freezing") || forecast.Summary.Contains("Bracing"))
+                                {
+                                    <span style="font-size: 3rem;">❄️</span>
+                                }
+                                else if (forecast.Summary.Contains("Chilly") || forecast.Summary.Contains("Cool"))
+                                {
+                                    <span style="font-size: 3rem;">🌥️</span>
+                                }
+                                else if (forecast.Summary.Contains("Balmy") || forecast.Summary.Contains("Warm"))
+                                {
+                                    <span style="font-size: 3rem;">☀️</span>
+                                }
+                                else
+                                {
+                                    <span style="font-size: 3rem;">🌡️</span>
+                                }
+                            </div>
+
+                            <h5 class="card-title fw-bold text-dark">@forecast.Date.ToShortDateString()</h5>
+                            <h6 class="card-subtitle mb-3 text-muted">@forecast.Summary</h6>
+
+                            <div class="d-flex justify-content-center align-items-center gap-3 mt-4">
+                                <div class="temp-box">
+                                    <span class="fw-bold fs-4 text-primary">@forecast.TemperatureC°C</span>
+                                </div>
+                                <div class="vr"></div>
+                                <div class="temp-box">
+                                    <span class="fw-bold fs-5 text-secondary">@forecast.TemperatureF°F</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<!-- تنسيقات CSS المخصصة -->
+<style>
+    .weather-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-radius: 15px;
+        background: linear-gradient(145deg, #ffffff, #f0f4f8);
+    }
+
+        .weather-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+        }
+
+    .weather-icon {
+        background: #e3f2fd;
+        width: 80px;
+        height: 80px;
+        margin: 0 auto;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+    }
+</style>
+
+@code {
+    private WeatherForecast[]? forecasts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // محاكاة جلب البيانات (يمكنك إبقاء الكود الأصلي الخاص بك هنا)
+        var startDate = DateOnly.FromDateTime(DateTime.Now);
+        var summaries = new[] { "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching" };
+        forecasts = Enumerable.Range(1, 5).Select(index => new WeatherForecast
+        {
+            Date = startDate.AddDays(index),
+            TemperatureC = Random.Shared.Next(-20, 55),
+            Summary = summaries[Random.Shared.Next(summaries.Length)]
+        }).ToArray();
+    }
+
+    public class WeatherForecast
+    {
+        public DateOnly Date { get; set; }
+        public int TemperatureC { get; set; }
+        public string? Summary { get; set; }
+        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    }
+}

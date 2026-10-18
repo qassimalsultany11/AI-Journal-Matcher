@@ -1,0 +1,54 @@
+/* تنسيق الشريط العلوي */
+.custom-top-bar {
+    background-color: #1e1e2f; /* لون داكن */
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+/* تنسيق الشريط الجانبي */
+.custom-sidebar {
+    background-color: #151521; /* لون داكن جداً */
+    color: #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* تنسيق دائرة البروفايل */
+.avatar-circle {
+    width: 60px;
+    height: 60px;
+    background-color: #3b3b54;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #fff;
+}
+
+/* تنسيق روابط القائمة */
+.custom-nav-link {
+    color: #a0a0b0;
+    border-radius: 8px;
+    margin-bottom: 5px;
+    transition: all 0.2s ease-in-out;
+    font-weight: 500;
+}
+
+    .custom-nav-link:hover {
+        color: #ffffff;
+        background-color: rgba(255, 255, 255, 0.1);
+        transform: translateX(-5px); /* حركة بسيطة عند المرور */
+    }
+
+    /* تنسيق الرابط النشط (الصفحة الحالية) */
+    .custom-nav-link.active {
+        color: #ffffff;
+        background-color: #4a4a75; /* لون بنفسجي مميز */
+        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    }
+
+    /* تنسيق الأيقونات داخل الروابط */
+    .custom-nav-link i {
+        font-size: 1.1rem;
+    }
