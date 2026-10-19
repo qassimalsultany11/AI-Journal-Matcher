@@ -1,31 +1,47 @@
 ﻿@inherits LayoutComponentBase
 
 <div class="sidebar">
-    <div class="sidebar-logo">
-        <i class="bi bi-journal-bookmark-fill text-primary"></i> AI Journal Matcher
+    <div class="sidebar-header">
+        <div class="sidebar-logo-icon">🎓</div>
+        <div>
+            <div style="font-weight: bold; font-size: 15px; color: white;">AI Journal</div>
+            <div style="font-size: 11px; color: #94A3B8;">Matcher</div>
+        </div>
     </div>
 
-    <nav>
-        <a href="/" class="nav-item active">
-            <i class="bi bi-house-door"></i> لوحة التحكم
-        </a>
-        <a href="/journals" class="nav-item">
+    <div class="sidebar-nav">
+        <NavLink class="nav-item" href="/" Match="NavLinkMatch.All">
+            <i class="bi bi-grid-1x2-fill"></i> لوحة التحكم
+        </NavLink>
+        <NavLink class="nav-item" href="/matcher">
+            <i class="bi bi-cpu-fill"></i> المطابقة الذكية
+        </NavLink>
+        <NavLink class="nav-item" href="/add-journal">
+            <i class="bi bi-plus-circle-fill"></i> إضافة مجلة
+        </NavLink>
+        <NavLink class="nav-item" href="/manage-journals">
             <i class="bi bi-journals"></i> إدارة المجلات
-        </a>
-        <a href="/match" class="nav-item">
-            <i class="bi bi-search"></i> المطابقة الذكية
-        </a>
-        <a href="/researchers" class="nav-item">
-            <i class="bi bi-person-lines-fill"></i> الباحثون
-        </a>
-        <a href="/settings" class="nav-item">
-            <i class="bi bi-gear"></i> الإعدادات
-        </a>
-    </nav>
+        </NavLink>
+        <NavLink class="nav-item" href="/researchers">
+            <i class="bi bi-people-fill"></i> الباحثون
+        </NavLink>
+        <NavLink class="nav-item" href="/settings">
+            <i class="bi bi-gear-fill"></i> الإعدادات
+        </NavLink>
+        <NavLink class="nav-item" href="/about">
+            <i class="bi bi-info-circle-fill"></i> حول التطبيق
+        </NavLink>
+    </div>
 
-    <!-- زر تسجيل الخروج في أسفل الشريط الجانبي -->
-    <div style="position: absolute; bottom: 20px; width: 100%; padding: 0 20px;">
-        <button class="btn btn-danger w-100" style="border-radius: 10px; padding: 12px;">
+    <div class="sidebar-footer">
+        <div class="user-profile">
+            <div class="user-avatar">Q</div>
+            <div>
+                <div style="font-weight: 600; font-size: 13px; color: white;">قاسم موسى</div>
+                <div style="font-size: 11px; color: #94A3B8;">Researcher</div>
+            </div>
+        </div>
+        <button class="btn-logout">
             <i class="bi bi-box-arrow-right"></i> تسجيل الخروج
         </button>
     </div>

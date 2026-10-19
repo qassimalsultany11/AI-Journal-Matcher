@@ -1,132 +1,137 @@
 ﻿@page "/"
 @inject HttpClient Http
+@implements IDisposable
 
 <PageTitle>لوحة التحكم | AI Journal Matcher</PageTitle>
 
-@if (isLoading)
-{
-    <div class="text-center mt-5">
-        <div class="spinner-border text-primary" role="status"></div>
-        <p class="mt-2 text-muted">جاري تحميل البيانات...</p>
+<!-- الشريط العلوي الخاص بلوحة التحكم -->
+<!-- الشريط العلوي الخاص بلوحة التحكم (صف واحد) -->
+<div class="home-top-navbar">
+    <!-- الجزء الأيمن: الترحيب -->
+    <div class="welcome-section">
+        <h3 class="welcome-title">مرحباً بعودتك، قاسم موسى رزيج! 👋</h3>
+        <div class="welcome-subtitle">نظرة عامة على المجلات الأكاديمية السحابية وإحصائيات النظام</div>
     </div>
-}
-else if (errorMessage != null)
-{
-    <div class="alert alert-danger">@errorMessage</div>
-}
-else
-{
-    <!-- الترحيب -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="fw-bold m-0">مرحباً، قاسم موسى!</h2>
-            <p class="text-muted m-0">نظرة عامة على المجلات الأكاديمية وإحصائيات النظام</p>
+
+    <!-- الجزء الأيسر: المستخدم، الوقت، التحديث -->
+    <div class="navbar-actions">
+        <!-- المستخدم -->
+        <div class="user-info-navbar">
+            <div class="user-avatar-nav">Q</div>
+            <span class="user-name-nav">Researcher</span>
         </div>
-        <button class="btn btn-outline-secondary rounded-pill px-4">
+
+        <!-- الوقت -->
+        <div class="date-time-box">
+            <div class="date-text">
+                <i class="bi bi-calendar3"></i> @currentDate
+            </div>
+            <div class="time-text">@currentTime</div>
+        </div>
+
+        <!-- زر التحديث -->
+        <button class="btn-refresh" @onclick="LoadDataAsync">
             <i class="bi bi-arrow-clockwise"></i> تحديث
         </button>
     </div>
+</div>
 
-    <!-- الكروت الإحصائية -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card stat-card">
-                <div>
-                    <p class="text-muted mb-1">إجمالي المجلات</p>
-                    <h3 class="fw-bold m-0">@journalsCount</h3>
-                </div>
-                <div class="stat-icon" style="background: #e0e7ff; color: #4f46e5;">
-                    <i class="bi bi-journal-text"></i>
-                </div>
+@if (isLoading)
+{
+    <div style="text-align: center; padding: 80px 0;">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
+        <p style="margin-top: 20px; color: #64748B; font-weight: 600; font-size: 16px;">جاري تحميل البيانات من السحابة...</p>
+    </div>
+}
+else
+{
+    <!-- بطاقات الإحصائيات (KPI) -->
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px;">
+        <!-- إجمالي المجلات -->
+        <div class="card stat-card" style="padding: 25px;">
+            <div>
+                <div style="font-size: 13px; color: #64748B; font-weight: 600;">إجمالي المجلات</div>
+                <div style="font-size: 32px; font-weight: 800; color: #1E293B; margin-top: 6px;">@journalsCount</div>
+            </div>
+            <div class="stat-icon" style="background: #EEF2FF; color: #6366F1; width: 60px; height: 60px; font-size: 28px;">
+                <i class="bi bi-journal-text"></i>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card stat-card">
-                <div>
-                    <p class="text-muted mb-1">الباحثون</p>
-                    <h3 class="fw-bold m-0">0</h3>
-                </div>
-                <div class="stat-icon" style="background: #dcfce7; color: #10b981;">
-                    <i class="bi bi-people"></i>
-                </div>
+
+        <!-- الباحثون -->
+        <div class="card stat-card" style="padding: 25px;">
+            <div>
+                <div style="font-size: 13px; color: #64748B; font-weight: 600;">الباحثون</div>
+                <div style="font-size: 32px; font-weight: 800; color: #1E293B; margin-top: 6px;">@researchersCount</div>
+            </div>
+            <div class="stat-icon" style="background: #DCFCE7; color: #16A34A; width: 60px; height: 60px; font-size: 28px;">
+                <i class="bi bi-people-fill"></i>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card stat-card">
-                <div>
-                    <p class="text-muted mb-1">جلسات المطابقة</p>
-                    <h3 class="fw-bold m-0">0</h3>
-                </div>
-                <div class="stat-icon" style="background: #fef3c7; color: #d97706;">
-                    <i class="bi bi-lightning-charge"></i>
-                </div>
+
+        <!-- جلسات المطابقة -->
+        <div class="card stat-card" style="padding: 25px;">
+            <div>
+                <div style="font-size: 13px; color: #64748B; font-weight: 600;">جلسات المطابقة</div>
+                <div style="font-size: 32px; font-weight: 800; color: #1E293B; margin-top: 6px;">0</div>
+            </div>
+            <div class="stat-icon" style="background: #FEF3C7; color: #D97706; width: 60px; height: 60px; font-size: 28px;">
+                <i class="bi bi-lightning-charge-fill"></i>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card stat-card">
-                <div>
-                    <p class="text-muted mb-1">دقة النظام</p>
-                    <h3 class="fw-bold m-0">99.2%</h3>
-                </div>
-                <div class="stat-icon" style="background: #fce7f3; color: #db2777;">
-                    <i class="bi bi-graph-up-arrow"></i>
-                </div>
+
+        <!-- دقة النظام -->
+        <div class="card stat-card" style="padding: 25px;">
+            <div>
+                <div style="font-size: 13px; color: #64748B; font-weight: 600;">دقة النظام</div>
+                <div style="font-size: 32px; font-weight: 800; color: #1E293B; margin-top: 6px;">99.2%</div>
+            </div>
+            <div class="stat-icon" style="background: #FCE7F3; color: #DB2777; width: 60px; height: 60px; font-size: 28px;">
+                <i class="bi bi-graph-up-arrow"></i>
             </div>
         </div>
     </div>
 
-    <!-- أزرار الإجراءات السريعة -->
-    <div class="card mb-4">
-        <h5 class="fw-bold mb-3"><i class="bi bi-lightning-fill text-warning"></i> إجراءات سريعة</h5>
-        <div class="row text-center">
-            <div class="col-md-3">
-                <button class="btn w-100 py-3" style="background: #e0e7ff; color: #4f46e5; border-radius: 12px;">
-                    <i class="bi bi-list-task d-block fs-3 mb-2"></i> إدارة المجلات
-                </button>
+    <!-- أحدث المجلات -->
+    <div class="card" style="padding: 0; overflow: hidden; border-radius: 16px;">
+        <!-- رأس الجدول -->
+        <div style="padding: 24px; border-bottom: 1px solid #F1F5F9; display: flex; justify-content: space-between; align-items: center; background: #FFFFFF;">
+            <div style="font-size: 18px; font-weight: bold; color: #1E293B; display: flex; align-items: center; gap: 10px;">
+                <i class="bi bi-journals" style="color: #6366F1;"></i> أحدث المجلات المضافة
             </div>
-            <div class="col-md-3">
-                <button class="btn w-100 py-3" style="background: #dcfce7; color: #10b981; border-radius: 12px;">
-                    <i class="bi bi-search d-block fs-3 mb-2"></i> المطابقة الذكية
-                </button>
-            </div>
-            <div class="col-md-3">
-                <button class="btn w-100 py-3" style="background: #fef3c7; color: #d97706; border-radius: 12px;">
-                    <i class="bi bi-plus-lg d-block fs-3 mb-2"></i> إضافة مجلة
-                </button>
-            </div>
-            <div class="col-md-3">
-                <button class="btn w-100 py-3" style="background: #fce7f3; color: #db2777; border-radius: 12px;">
-                    <i class="bi bi-gear d-block fs-3 mb-2"></i> الإعدادات
-                </button>
-            </div>
+            <a href="/manage-journals" style="font-size: 14px; color: #6366F1; text-decoration: none; font-weight: 700; background: #EEF2FF; padding: 8px 16px; border-radius: 8px; transition: 0.2s;">
+                عرض الكل <i class="bi bi-arrow-left" style="font-size: 12px;"></i>
+            </a>
         </div>
-    </div>
 
-    <!-- جدول أحدث المجلات -->
-    <div class="card">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="fw-bold m-0"><i class="bi bi-clock-history"></i> أحدث المجلات</h5>
-            <a href="#" class="text-decoration-none">عرض الكل &larr;</a>
-        </div>
-        <table class="table">
+        <!-- الجدول -->
+        <table class="table-custom" style="margin-bottom: 0;">
             <thead>
                 <tr>
                     <th>اسم المجلة</th>
                     <th>الناشر</th>
                     <th>الدولة</th>
                     <th>الربع</th>
-                    <th>التأثير</th>
+                    <th>معامل التأثير</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var journal in journals)
+                @if (recentJournals.Count == 0)
+                {
+                    <tr><td colspan="5" style="text-align: center; color: #94A3B8; padding: 40px; font-size: 15px;">لا توجد مجلات لعرضها حالياً</td></tr>
+                }
+                @foreach (var journal in recentJournals)
                 {
                     <tr>
-                        <td class="fw-bold">@journal.Title</td>
-                        <td class="text-muted">@journal.Publisher</td>
-                        <td class="text-muted">@journal.Country</td>
-                        <td><span class="badge bg-primary">@journal.Quartile</span></td>
-                        <td class="fw-bold">@journal.ImpactFactor</td>
+                        <td style="font-weight: bold; color: #1E293B; font-size: 15px;">@journal.name</td>
+                        <td style="color: #475569; font-size: 14px;">@journal.publisher</td>
+                        <td style="color: #475569; font-size: 14px;">@journal.country</td>
+                        <td>
+                            <span class="badge-quartile">
+                                @journal.quartile
+                            </span>
+                        </td>
+                        <td style="font-weight: 800; color: #0F172A; font-size: 16px;">@journal.impact_factor</td>
                     </tr>
                 }
             </tbody>
@@ -136,59 +141,99 @@ else
 
 @code {
     private bool isLoading = true;
-    private string? errorMessage;
     private int journalsCount = 0;
-    private List<Journal> journals = new();
+    private int researchersCount = 0;
+    private List<Journal> recentJournals = new();
+
+    private string currentDate = "";
+    private string currentTime = "";
+    private Timer? _timer;
 
     private string supabaseUrl = "https://dayowfmmqtoyewjgnptf.supabase.co";
     private string supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRheW93Zm1tcXRveWV3amducHRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwMTI4MTcsImV4cCI6MjEwNjU4ODgxN30.IcR-HI9AZOdsWyg93PURcm3riWzqzd7r0v69P0pzNTc";
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadDataAsync();
+        UpdateTime();
+
+        _timer = new Timer(_ =>
+                {
+                    InvokeAsync(() =>
+                    {
+                        UpdateTime();
+                        StateHasChanged();
+                    });
+                }, null, 0, 1000);
+    }
+
+    private void UpdateTime()
+    {
+        var now = DateTime.Now;
+        currentDate = now.ToString("yyyy-MM-dd");
+        currentTime = now.ToString("hh:mm:ss tt");
+    }
+
+    private async Task LoadDataAsync()
+    {
+        isLoading = true;
         try
         {
-            // جلب عدد المجلات
-            var reqCount = new HttpRequestMessage(HttpMethod.Get, $"{supabaseUrl}/rest/v1/journals?select=id");
-            reqCount.Headers.Add("apikey", supabaseKey);
-            reqCount.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
-            var resCount = await Http.SendAsync(reqCount);
+            var requestJournals = new HttpRequestMessage(HttpMethod.Get, $"{supabaseUrl}/rest/v1/journals?select=*&limit=5&order=id.desc");
+            requestJournals.Headers.Add("apikey", supabaseKey);
+            requestJournals.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
 
-            if (resCount.IsSuccessStatusCode)
+            var responseJournals = await Http.SendAsync(requestJournals);
+            if (responseJournals.IsSuccessStatusCode)
             {
-                var jsonCount = await resCount.Content.ReadAsStringAsync();
+                var json = await responseJournals.Content.ReadAsStringAsync();
+                recentJournals = System.Text.Json.JsonSerializer.Deserialize<List<Journal>>(json, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
+            }
+
+            var requestCount = new HttpRequestMessage(HttpMethod.Get, $"{supabaseUrl}/rest/v1/journals?select=id");
+            requestCount.Headers.Add("apikey", supabaseKey);
+            requestCount.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
+            var responseCount = await Http.SendAsync(requestCount);
+            if (responseCount.IsSuccessStatusCode)
+            {
+                var jsonCount = await responseCount.Content.ReadAsStringAsync();
                 using var doc = System.Text.Json.JsonDocument.Parse(jsonCount);
                 journalsCount = doc.RootElement.GetArrayLength();
             }
 
-            // جلب أحدث 5 مجلات (على افتراض أن لديك أعمدة بهذه الأسماء في Supabase)
-            var reqJournals = new HttpRequestMessage(HttpMethod.Get, $"{supabaseUrl}/rest/v1/journals?select=*&limit=5");
-            reqJournals.Headers.Add("apikey", supabaseKey);
-            reqJournals.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
-            var resJournals = await Http.SendAsync(reqJournals);
-
-            if (resJournals.IsSuccessStatusCode)
+            var requestUsers = new HttpRequestMessage(HttpMethod.Get, $"{supabaseUrl}/rest/v1/users?select=id");
+            requestUsers.Headers.Add("apikey", supabaseKey);
+            requestUsers.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
+            var responseUsers = await Http.SendAsync(requestUsers);
+            if (responseUsers.IsSuccessStatusCode)
             {
-                var jsonJournals = await resJournals.Content.ReadAsStringAsync();
-                // ملاحظة: تأكد من أن أسماء الخصائص هنا تطابق أسماء الأعمدة في قاعدة البيانات
-                journals = System.Text.Json.JsonSerializer.Deserialize<List<Journal>>(jsonJournals, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
+                var jsonUsers = await responseUsers.Content.ReadAsStringAsync();
+                using var docUsers = System.Text.Json.JsonDocument.Parse(jsonUsers);
+                researchersCount = docUsers.RootElement.GetArrayLength();
             }
-
-            isLoading = false;
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
             isLoading = false;
-            errorMessage = $"حدث خطأ: {ex.Message}";
         }
     }
 
-    // كلاس يمثل بيانات المجلة (يجب أن يطابق أعمدة جدول journals في Supabase)
+    public void Dispose()
+    {
+        _timer?.Dispose();
+    }
+
     public class Journal
     {
-        public string Title { get; set; } = "";
-        public string Publisher { get; set; } = "";
-        public string Country { get; set; } = "";
-        public string Quartile { get; set; } = "";
-        public double ImpactFactor { get; set; }
+        public long id { get; set; }
+        public string name { get; set; } = "";
+        public string publisher { get; set; } = "";
+        public string country { get; set; } = "";
+        public string quartile { get; set; } = "";
+        public double impact_factor { get; set; }
     }
 }
