@@ -1,36 +1,29 @@
 ﻿@page "/"
+@attribute [Authorize]
 @inject HttpClient Http
 @implements IDisposable
 
 <PageTitle>لوحة التحكم | AI Journal Matcher</PageTitle>
 
-<!-- الشريط العلوي الخاص بلوحة التحكم -->
-<!-- الشريط العلوي الخاص بلوحة التحكم (صف واحد) -->
-<div class="home-top-navbar">
-    <!-- الجزء الأيمن: الترحيب -->
+<!-- الشريط العلوي -->
+<div class="home-top-navbar" style="display: flex; justify-content: space-between; align-items: center; padding: 20px; background: white; border-bottom: 1px solid #e2e8f0;">
     <div class="welcome-section">
-        <h3 class="welcome-title">مرحباً بعودتك، قاسم موسى رزيج! 👋</h3>
-        <div class="welcome-subtitle">نظرة عامة على المجلات الأكاديمية السحابية وإحصائيات النظام</div>
+        <h3 class="welcome-title" style="margin: 0; color: #1e293b;">مرحباً بعودتك، قاسم موسى رزيج! 👋</h3>
+        <div class="welcome-subtitle" style="color: #64748b; font-size: 14px; margin-top: 4px;">نظرة عامة على المجلات الأكاديمية السحابية وإحصائيات النظام</div>
     </div>
 
-    <!-- الجزء الأيسر: المستخدم، الوقت، التحديث -->
-    <div class="navbar-actions">
-        <!-- المستخدم -->
-        <div class="user-info-navbar">
-            <div class="user-avatar-nav">Q</div>
-            <span class="user-name-nav">Researcher</span>
+    <div class="navbar-actions" style="display: flex; align-items: center; gap: 15px;">
+        <div class="user-info-navbar" style="display: flex; align-items: center; gap: 8px;">
+            <div class="user-avatar-nav" style="width: 35px; height: 35px; background: #6366F1; color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold;">Q</div>
+            <span class="user-name-nav" style="font-size: 14px; font-weight: 600;">Researcher</span>
         </div>
 
-        <!-- الوقت -->
-        <div class="date-time-box">
-            <div class="date-text">
-                <i class="bi bi-calendar3"></i> @currentDate
-            </div>
+        <div class="date-time-box" style="text-align: left; font-size: 12px; color: #64748b;">
+            <div class="date-text"><i class="bi bi-calendar3"></i> @currentDate</div>
             <div class="time-text">@currentTime</div>
         </div>
 
-        <!-- زر التحديث -->
-        <button class="btn-refresh" @onclick="LoadDataAsync">
+        <button class="btn-refresh" @onclick="LoadDataAsync" style="padding: 8px 16px; border-radius: 8px; background: #F1F5F9; border: none; cursor: pointer; font-weight: bold; color: #334155;">
             <i class="bi bi-arrow-clockwise"></i> تحديث
         </button>
     </div>
@@ -39,114 +32,186 @@
 @if (isLoading)
 {
     <div style="text-align: center; padding: 80px 0;">
-        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem; border: 4px solid #e2e8f0; border-top-color: #6366F1; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
         <p style="margin-top: 20px; color: #64748B; font-weight: 600; font-size: 16px;">جاري تحميل البيانات من السحابة...</p>
     </div>
 }
 else
 {
-    <!-- بطاقات الإحصائيات (KPI) -->
-    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px;">
-        <!-- إجمالي المجلات -->
-        <div class="card stat-card" style="padding: 25px;">
-            <div>
-                <div style="font-size: 13px; color: #64748B; font-weight: 600;">إجمالي المجلات</div>
-                <div style="font-size: 32px; font-weight: 800; color: #1E293B; margin-top: 6px;">@journalsCount</div>
+    <div style="padding: 20px; background: #f8fafc; min-height: 100vh;">
+        <!-- ===== الصف الأول: البطاقات الرئيسية ===== -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 20px;">
+            <!-- إجمالي المجلات -->
+            <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-size: 13px; color: #64748B; font-weight: 600;">إجمالي المجلات</div>
+                    <div style="font-size: 32px; font-weight: 800; color: #1E293B; margin-top: 6px;">@totalJournals</div>
+                </div>
+                <div style="background: #EEF2FF; color: #6366F1; width: 60px; height: 60px; font-size: 28px; display: flex; justify-content: center; align-items: center; border-radius: 12px;">
+                    <i class="bi bi-journal-text"></i>
+                </div>
             </div>
-            <div class="stat-icon" style="background: #EEF2FF; color: #6366F1; width: 60px; height: 60px; font-size: 28px;">
-                <i class="bi bi-journal-text"></i>
+
+            <!-- المجلات العراقية -->
+            <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-size: 13px; color: #64748B; font-weight: 600;">المجلات العراقية 🇮🇶</div>
+                    <div style="font-size: 32px; font-weight: 800; color: #16A34A; margin-top: 6px;">@iraqiJournalsCount</div>
+                </div>
+                <div style="background: #DCFCE7; color: #16A34A; width: 60px; height: 60px; font-size: 28px; display: flex; justify-content: center; align-items: center; border-radius: 12px;">
+                    <i class="bi bi-geo-alt-fill"></i>
+                </div>
+            </div>
+
+            <!-- متوسط معامل التأثير -->
+            <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-size: 13px; color: #64748B; font-weight: 600;">متوسط معامل التأثير</div>
+                    <div style="font-size: 32px; font-weight: 800; color: #D97706; margin-top: 6px;">@averageImpactFactor.ToString("0.00")</div>
+                </div>
+                <div style="background: #FEF3C7; color: #D97706; width: 60px; height: 60px; font-size: 28px; display: flex; justify-content: center; align-items: center; border-radius: 12px;">
+                    <i class="bi bi-graph-up"></i>
+                </div>
+            </div>
+
+            <!-- أعلى معامل تأثير -->
+            <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-size: 13px; color: #64748B; font-weight: 600;">أعلى معامل تأثير</div>
+                    <div style="font-size: 32px; font-weight: 800; color: #DB2777; margin-top: 6px;">@maxImpactFactor.ToString("0.00")</div>
+                </div>
+                <div style="background: #FCE7F3; color: #DB2777; width: 60px; height: 60px; font-size: 28px; display: flex; justify-content: center; align-items: center; border-radius: 12px;">
+                    <i class="bi bi-trophy-fill"></i>
+                </div>
             </div>
         </div>
 
-        <!-- الباحثون -->
-        <div class="card stat-card" style="padding: 25px;">
-            <div>
-                <div style="font-size: 13px; color: #64748B; font-weight: 600;">الباحثون</div>
-                <div style="font-size: 32px; font-weight: 800; color: #1E293B; margin-top: 6px;">@researchersCount</div>
-            </div>
-            <div class="stat-icon" style="background: #DCFCE7; color: #16A34A; width: 60px; height: 60px; font-size: 28px;">
-                <i class="bi bi-people-fill"></i>
-            </div>
-        </div>
-
-        <!-- جلسات المطابقة -->
-        <div class="card stat-card" style="padding: 25px;">
-            <div>
-                <div style="font-size: 13px; color: #64748B; font-weight: 600;">جلسات المطابقة</div>
-                <div style="font-size: 32px; font-weight: 800; color: #1E293B; margin-top: 6px;">0</div>
-            </div>
-            <div class="stat-icon" style="background: #FEF3C7; color: #D97706; width: 60px; height: 60px; font-size: 28px;">
-                <i class="bi bi-lightning-charge-fill"></i>
-            </div>
-        </div>
-
-        <!-- دقة النظام -->
-        <div class="card stat-card" style="padding: 25px;">
-            <div>
-                <div style="font-size: 13px; color: #64748B; font-weight: 600;">دقة النظام</div>
-                <div style="font-size: 32px; font-weight: 800; color: #1E293B; margin-top: 6px;">99.2%</div>
-            </div>
-            <div class="stat-icon" style="background: #FCE7F3; color: #DB2777; width: 60px; height: 60px; font-size: 28px;">
-                <i class="bi bi-graph-up-arrow"></i>
-            </div>
-        </div>
-    </div>
-
-    <!-- أحدث المجلات -->
-    <div class="card" style="padding: 0; overflow: hidden; border-radius: 16px;">
-        <!-- رأس الجدول -->
-        <div style="padding: 24px; border-bottom: 1px solid #F1F5F9; display: flex; justify-content: space-between; align-items: center; background: #FFFFFF;">
-            <div style="font-size: 18px; font-weight: bold; color: #1E293B; display: flex; align-items: center; gap: 10px;">
-                <i class="bi bi-journals" style="color: #6366F1;"></i> أحدث المجلات المضافة
-            </div>
-            <a href="/manage-journals" style="font-size: 14px; color: #6366F1; text-decoration: none; font-weight: 700; background: #EEF2FF; padding: 8px 16px; border-radius: 8px; transition: 0.2s;">
-                عرض الكل <i class="bi bi-arrow-left" style="font-size: 12px;"></i>
-            </a>
-        </div>
-
-        <!-- الجدول -->
-        <table class="table-custom" style="margin-bottom: 0;">
-            <thead>
-                <tr>
-                    <th>اسم المجلة</th>
-                    <th>الناشر</th>
-                    <th>الدولة</th>
-                    <th>الربع</th>
-                    <th>معامل التأثير</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (recentJournals.Count == 0)
+        <!-- ===== الصف الثاني: توزيع الأرباع + الناشرون ===== -->
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 20px;">
+            <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                <div style="font-size: 16px; font-weight: bold; color: #1E293B; margin-bottom: 18px; display: flex; align-items: center; gap: 8px;">
+                    <i class="bi bi-bar-chart-fill" style="color: #6366F1;"></i> توزيع المجلات حسب الربع (Quartile)
+                </div>
+                @if (totalJournals > 0)
                 {
-                    <tr><td colspan="5" style="text-align: center; color: #94A3B8; padding: 40px; font-size: 15px;">لا توجد مجلات لعرضها حالياً</td></tr>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+                        <div style="text-align: center; padding: 15px; background: #F0FDF4; border-radius: 12px;">
+                            <div style="font-size: 12px; color: #166534; font-weight: 700;">Q1</div>
+                            <div style="font-size: 26px; font-weight: 800; color: #16A34A;">@q1Count</div>
+                            <div style="font-size: 11px; color: #64748B;">@GetPercent(q1Count)%</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: #EFF6FF; border-radius: 12px;">
+                            <div style="font-size: 12px; color: #1E40AF; font-weight: 700;">Q2</div>
+                            <div style="font-size: 26px; font-weight: 800; color: #3B82F6;">@q2Count</div>
+                            <div style="font-size: 11px; color: #64748B;">@GetPercent(q2Count)%</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: #FFFBEB; border-radius: 12px;">
+                            <div style="font-size: 12px; color: #92400E; font-weight: 700;">Q3</div>
+                            <div style="font-size: 26px; font-weight: 800; color: #F59E0B;">@q3Count</div>
+                            <div style="font-size: 11px; color: #64748B;">@GetPercent(q3Count)%</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: #FEF2F2; border-radius: 12px;">
+                            <div style="font-size: 12px; color: #991B1B; font-weight: 700;">Q4</div>
+                            <div style="font-size: 26px; font-weight: 800; color: #EF4444;">@q4Count</div>
+                            <div style="font-size: 11px; color: #64748B;">@GetPercent(q4Count)%</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 18px; display: flex; height: 14px; border-radius: 8px; overflow: hidden;">
+                        <div style="flex: @q1Count; background: #16A34A; min-width: 0;"></div>
+                        <div style="flex: @q2Count; background: #3B82F6; min-width: 0;"></div>
+                        <div style="flex: @q3Count; background: #F59E0B; min-width: 0;"></div>
+                        <div style="flex: @q4Count; background: #EF4444; min-width: 0;"></div>
+                    </div>
                 }
-                @foreach (var journal in recentJournals)
+                else
                 {
-                    <tr>
-                        <td style="font-weight: bold; color: #1E293B; font-size: 15px;">@journal.name</td>
-                        <td style="color: #475569; font-size: 14px;">@journal.publisher</td>
-                        <td style="color: #475569; font-size: 14px;">@journal.country</td>
-                        <td>
-                            <span class="badge-quartile">
-                                @journal.quartile
-                            </span>
-                        </td>
-                        <td style="font-weight: 800; color: #0F172A; font-size: 16px;">@journal.impact_factor</td>
+                    <div style="text-align: center; color: #94A3B8; padding: 30px;">لا توجد بيانات</div>
+                }
+            </div>
+
+            <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                <div style="font-size: 16px; font-weight: bold; color: #1E293B; margin-bottom: 18px; display: flex; align-items: center; gap: 8px;">
+                    <i class="bi bi-building" style="color: #16A34A;"></i> أكثر الناشرين تكراراً
+                </div>
+                @if (topPublishers.Count == 0)
+                {
+                    <div style="text-align: center; color: #94A3B8; padding: 20px;">لا توجد بيانات</div>
+                }
+                else
+                {
+                    @foreach (var p in topPublishers)
+                    {
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #F1F5F9; font-size: 13px;">
+                            <span style="color: #475569; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 65%;">@p.Name</span>
+                            <span style="font-weight: 800; color: #1E293B; background: #F1F5F9; padding: 2px 10px; border-radius: 6px;">@p.Count</span>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+        <!-- ===== الصف الثالث: أحدث المجلات ===== -->
+        <div style="background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); overflow: hidden;">
+            <div style="padding: 24px; border-bottom: 1px solid #F1F5F9; display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-size: 18px; font-weight: bold; color: #1E293B; display: flex; align-items: center; gap: 10px;">
+                    <i class="bi bi-journals" style="color: #6366F1;"></i> أحدث المجلات المضافة
+                </div>
+                <a href="/manage-journals" style="font-size: 14px; color: #6366F1; text-decoration: none; font-weight: 700; background: #EEF2FF; padding: 8px 16px; border-radius: 8px;">
+                    عرض الكل <i class="bi bi-arrow-left" style="font-size: 12px;"></i>
+                </a>
+            </div>
+            <table style="width: 100%; border-collapse: collapse; text-align: right;">
+                <thead>
+                    <tr style="background: #F8FAFC; border-bottom: 1px solid #E2E8F0;">
+                        <th style="padding: 15px; color: #475569; font-weight: 600;">اسم المجلة</th>
+                        <th style="padding: 15px; color: #475569; font-weight: 600;">الناشر</th>
+                        <th style="padding: 15px; color: #475569; font-weight: 600;">الدولة</th>
+                        <th style="padding: 15px; color: #475569; font-weight: 600;">الربع</th>
+                        <th style="padding: 15px; color: #475569; font-weight: 600;">معامل التأثير</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @if (recentJournals.Count == 0)
+                    {
+                        <tr><td colspan="5" style="text-align: center; color: #94A3B8; padding: 40px; font-size: 15px;">لا توجد مجلات لعرضها حالياً</td></tr>
+                    }
+                    @foreach (var journal in recentJournals)
+                    {
+                        <tr style="border-bottom: 1px solid #F1F5F9;">
+                            <td style="padding: 15px; font-weight: bold; color: #1E293B; font-size: 15px;">@journal.name</td>
+                            <td style="padding: 15px; color: #475569; font-size: 14px;">@journal.publisher</td>
+                            <td style="padding: 15px; color: #475569; font-size: 14px;">@journal.country</td>
+                            <td style="padding: 15px;"><span style="background: #EEF2FF; color: #6366F1; padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 12px;">@journal.quartile</span></td>
+                            <td style="padding: 15px; font-weight: 800; color: #0F172A; font-size: 16px;">@journal.impact_factor</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
 }
 
+<style>
+    @@keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+
 @code {
     private bool isLoading = true;
-    private int journalsCount = 0;
-    private int researchersCount = 0;
+    private int totalJournals = 0;
+    private int iraqiJournalsCount = 0;
+    private int q1Count = 0, q2Count = 0, q3Count = 0, q4Count = 0;
+    private double averageImpactFactor = 0, maxImpactFactor = 0;
     private List<Journal> recentJournals = new();
-
-    private string currentDate = "";
-    private string currentTime = "";
+    private List<PublisherStat> topPublishers = new();
+    private string currentDate = "", currentTime = "";
     private Timer? _timer;
 
     private string supabaseUrl = "https://dayowfmmqtoyewjgnptf.supabase.co";
@@ -156,15 +221,7 @@ else
     {
         await LoadDataAsync();
         UpdateTime();
-
-        _timer = new Timer(_ =>
-                {
-                    InvokeAsync(() =>
-                    {
-                        UpdateTime();
-                        StateHasChanged();
-                    });
-                }, null, 0, 1000);
+        _timer = new Timer(_ => InvokeAsync(() => { UpdateTime(); StateHasChanged(); }), null, 0, 1000);
     }
 
     private void UpdateTime()
@@ -174,66 +231,93 @@ else
         currentTime = now.ToString("hh:mm:ss tt");
     }
 
+    private double GetPercent(int count) => totalJournals > 0 ? Math.Round((double)count / totalJournals * 100, 1) : 0;
+
     private async Task LoadDataAsync()
     {
         isLoading = true;
         try
         {
-            var requestJournals = new HttpRequestMessage(HttpMethod.Get, $"{supabaseUrl}/rest/v1/journals?select=*&limit=5&order=id.desc");
-            requestJournals.Headers.Add("apikey", supabaseKey);
-            requestJournals.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
+            totalJournals = await GetCountAsync($"{supabaseUrl}/rest/v1/journals?select=id");
+            iraqiJournalsCount = await GetCountAsync($"{supabaseUrl}/rest/v1/journals?select=id&country=eq.Iraq");
 
-            var responseJournals = await Http.SendAsync(requestJournals);
-            if (responseJournals.IsSuccessStatusCode)
+            var docQ = await GetJsonAsync($"{supabaseUrl}/rest/v1/journals?select=quartile,count()&quartile=not.is.null");
+            if (docQ != null)
             {
-                var json = await responseJournals.Content.ReadAsStringAsync();
-                recentJournals = System.Text.Json.JsonSerializer.Deserialize<List<Journal>>(json, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
+                foreach (var item in docQ.RootElement.EnumerateArray())
+                {
+                    var q = item.TryGetProperty("quartile", out var qp) ? qp.GetString()?.Trim().ToUpper() : null;
+                    var c = item.TryGetProperty("count", out var cp) ? cp.GetInt32() : 0;
+                    if (q == "Q1") q1Count = c; else if (q == "Q2") q2Count = c; else if (q == "Q3") q3Count = c; else if (q == "Q4") q4Count = c;
+                }
             }
 
-            var requestCount = new HttpRequestMessage(HttpMethod.Get, $"{supabaseUrl}/rest/v1/journals?select=id");
-            requestCount.Headers.Add("apikey", supabaseKey);
-            requestCount.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
-            var responseCount = await Http.SendAsync(requestCount);
-            if (responseCount.IsSuccessStatusCode)
+            var docAvg = await GetJsonAsync($"{supabaseUrl}/rest/v1/journals?select=impact_factor.avg()");
+            if (docAvg != null && docAvg.RootElement.GetArrayLength() > 0)
             {
-                var jsonCount = await responseCount.Content.ReadAsStringAsync();
-                using var doc = System.Text.Json.JsonDocument.Parse(jsonCount);
-                journalsCount = doc.RootElement.GetArrayLength();
+                var a = docAvg.RootElement[0].GetProperty("avg");
+                if (a.ValueKind != System.Text.Json.JsonValueKind.Null) averageImpactFactor = a.GetDouble();
             }
 
-            var requestUsers = new HttpRequestMessage(HttpMethod.Get, $"{supabaseUrl}/rest/v1/users?select=id");
-            requestUsers.Headers.Add("apikey", supabaseKey);
-            requestUsers.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
-            var responseUsers = await Http.SendAsync(requestUsers);
-            if (responseUsers.IsSuccessStatusCode)
+            var docMax = await GetJsonAsync($"{supabaseUrl}/rest/v1/journals?select=impact_factor.max()");
+            if (docMax != null && docMax.RootElement.GetArrayLength() > 0)
             {
-                var jsonUsers = await responseUsers.Content.ReadAsStringAsync();
-                using var docUsers = System.Text.Json.JsonDocument.Parse(jsonUsers);
-                researchersCount = docUsers.RootElement.GetArrayLength();
+                var m = docMax.RootElement[0].GetProperty("max");
+                if (m.ValueKind != System.Text.Json.JsonValueKind.Null) maxImpactFactor = m.GetDouble();
+            }
+
+            topPublishers.Clear();
+            var docPub = await GetJsonAsync($"{supabaseUrl}/rest/v1/journals?select=publisher,count()&publisher=not.is.null&order=count.desc&limit=5");
+            if (docPub != null)
+            {
+                foreach (var item in docPub.RootElement.EnumerateArray())
+                {
+                    var n = item.TryGetProperty("publisher", out var pn) ? pn.GetString() : "";
+                    var c = item.TryGetProperty("count", out var pc) ? pc.GetInt32() : 0;
+                    if (!string.IsNullOrWhiteSpace(n)) topPublishers.Add(new PublisherStat { Name = n, Count = c });
+                }
+            }
+
+            var docRecent = await GetJsonAsync($"{supabaseUrl}/rest/v1/journals?select=*&limit=5&order=id.desc");
+            if (docRecent != null)
+            {
+                recentJournals = System.Text.Json.JsonSerializer.Deserialize<List<Journal>>(docRecent.RootElement.GetRawText(), new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
             }
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error: {ex.Message}");
-        }
-        finally
-        {
-            isLoading = false;
-        }
+        catch (Exception ex) { Console.WriteLine($"Error: {ex.Message}"); }
+        finally { isLoading = false; }
     }
 
-    public void Dispose()
+    private async Task<System.Text.Json.JsonDocument?> GetJsonAsync(string url)
     {
-        _timer?.Dispose();
+        var req = new HttpRequestMessage(HttpMethod.Get, url);
+        req.Headers.Add("apikey", supabaseKey);
+        req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
+        var res = await Http.SendAsync(req);
+        if (!res.IsSuccessStatusCode) return null;
+        return System.Text.Json.JsonDocument.Parse(await res.Content.ReadAsStringAsync());
     }
 
-    public class Journal
+    private async Task<int> GetCountAsync(string url)
     {
-        public long id { get; set; }
-        public string name { get; set; } = "";
-        public string publisher { get; set; } = "";
-        public string country { get; set; } = "";
-        public string quartile { get; set; } = "";
-        public double impact_factor { get; set; }
+        var req = new HttpRequestMessage(HttpMethod.Head, url);
+        req.Headers.Add("apikey", supabaseKey);
+        req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
+        req.Headers.Add("Prefer", "count=exact");
+        var res = await Http.SendAsync(req);
+        if (res.IsSuccessStatusCode && res.Content.Headers.TryGetValues("Content-Range", out var v))
+        {
+            var r = v.FirstOrDefault();
+            if (r != null && r.Contains("/"))
+            {
+                var c = r.Split('/').Last();
+                if (int.TryParse(c, out int count)) return count;
+            }
+        }
+        return 0;
     }
+
+    public void Dispose() => _timer?.Dispose();
+    public class Journal { public long id { get; set; } public string name { get; set; } = ""; public string publisher { get; set; } = ""; public string country { get; set; } = ""; public string quartile { get; set; } = ""; public double impact_factor { get; set; } }
+    public class PublisherStat { public string Name { get; set; } = ""; public int Count { get; set; } }
 }

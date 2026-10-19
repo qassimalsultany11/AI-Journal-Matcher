@@ -1,4 +1,5 @@
 using AIJOURNALMATCHERWEB;
+using AIJOURNALMATCHERWEB.Services; // <-- أضف هذا السطر
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
@@ -22,9 +23,12 @@ builder.Services.AddScoped(sp => new HttpClient
 builder.Services.AddBlazoredLocalStorage();
 
 // ============================================================
-//                   Authorization
+//                   Authorization & Authentication
 // ============================================================
 builder.Services.AddAuthorizationCore();
+
+// ربط مزود المصادقة المخصص الذي أنشأناه
+builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
 
 // ============================================================
 //                   Run

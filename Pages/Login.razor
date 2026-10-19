@@ -1,157 +1,378 @@
 ﻿@page "/login"
-@inject Supabase.Client SupabaseClient
-@inject NavigationManager Navigation
-@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+
+@attribute [AllowAnonymous]
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+@using Microsoft.AspNetCore.Components.Authorization
+@using AIJOURNALMATCHERWEB.Services
 
 <PageTitle>تسجيل الدخول | AI Journal Matcher</PageTitle>
 
-<!-- الخلفية المتحركة (الفقعات) -->
+<style>
+    .login-page-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
 
-        
-        <!-- الرأس الملون -->
-        <div class="card-header-gradient">
-            <div class="user-icon-wrapper">
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" viewBox="0 0 16 16">
-                  <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0Zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4Zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10Z"/>
-                </svg>
+    .login-card {
+        width: 100%;
+        max-width: 420px;
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .login-header {
+        background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #EC4899 100%);
+        padding: 30px 20px;
+        text-align: center;
+        color: white;
+        position: relative;
+    }
+
+    .login-header-icon {
+        width: 68px;
+        height: 68px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0 auto 15px;
+        font-size: 30px;
+    }
+
+    .login-header h2 {
+        margin: 0 0 5px 0;
+        font-size: 22px;
+        font-weight: bold;
+    }
+
+    .login-header p {
+        margin: 0;
+        font-size: 12px;
+        color: #E0E7FF;
+    }
+
+    .login-body {
+        padding: 30px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+        position: relative;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: #334155;
+        margin-bottom: 6px;
+    }
+
+    .input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .form-control {
+        width: 100%;
+        height: 42px;
+        padding: 0 40px;
+        font-size: 13px;
+        color: #2C3E50;
+        background: #F8FAFC;
+        border: 1.5px solid #E0E6ED;
+        border-radius: 8px;
+        transition: all 0.2s;
+        box-sizing: border-box;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #6366F1;
+        background: #FFFFFF;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 14px;
+        color: #94A3B8;
+        font-size: 14px;
+        pointer-events: none;
+    }
+
+    .btn-toggle-pass {
+        position: absolute;
+        right: 10px;
+        background: transparent;
+        border: none;
+        color: #94A3B8;
+        cursor: pointer;
+        font-size: 14px;
+        padding: 5px;
+    }
+
+    .btn-toggle-pass:hover {
+        color: #6366F1;
+    }
+
+    .options-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        font-size: 12px;
+    }
+
+    .remember-me {
+        display: flex;
+        align-items: center;
+        color: #64748B;
+        gap: 6px;
+        cursor: pointer;
+    }
+
+    .forgot-link {
+        color: #6366F1;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .forgot-link:hover {
+        text-decoration: underline;
+    }
+
+    .btn-primary {
+        width: 100%;
+        height: 46px;
+        background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+    }
+
+    .btn-primary:hover {
+        box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-primary:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+
+    .divider {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin: 20px 0;
+        color: #94A3B8;
+        font-size: 11px;
+    }
+
+    .divider::before, .divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid #E2E8F0;
+    }
+
+    .divider::before { margin-right: 10px; }
+    .divider::after { margin-left: 10px; }
+
+    .btn-secondary {
+        width: 100%;
+        height: 44px;
+        background: white;
+        color: #6366F1;
+        border: 1.5px solid #E0E6ED;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+        background: #F8FAFC;
+        border-color: #6366F1;
+    }
+
+    .alert-error {
+        background: #FEF2F2;
+        color: #DC2626;
+        border: 1px solid #FECACA;
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 12px;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+</style>
+
+<div class="login-page-wrapper">
+    <div class="login-card">
+        <div class="login-header">
+            <div class="login-header-icon">
+                <i class="bi bi-person"></i>
             </div>
-            <h2>أهلاً بعودتك</h2>
-            <p>تسجيل الدخول إلى AI Journal Matcher</p>
+            <h2>Welcome Back</h2>
+            <p>Sign in to AI Journal Matcher</p>
         </div>
 
-        <!-- جسم البطاقة -->
-       
+        <div class="login-body">
             @if (!string.IsNullOrEmpty(errorMessage))
             {
-                <div class="custom-alert error">
-                    <span>⚠️</span> @errorMessage
-                </div>
-            }
-            @if (!string.IsNullOrEmpty(successMessage))
-            {
-                <div class="custom-alert success">
-                    <span>✅</span> @successMessage
+                <div class="alert-error">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    @errorMessage
                 </div>
             }
 
-            <EditForm Model="loginModel" OnValidSubmit="HandleLogin">
-                <DataAnnotationsValidator />
-
-                <div class="input-group-custom">
-                    <label>البريد الإلكتروني</label>
-                    <div class="input-container">
-                        <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                          <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0Zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4Zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10Z"/>
-                        </svg>
-                        <InputText type="email" class="custom-input" placeholder="name@example.com" @bind-Value="loginModel.Email" />
-                    </div>
-                    <ValidationMessage For="() => loginModel.Email" />
+            <div class="form-group">
+                <label class="form-label">Username or Email</label>
+                <div class="input-wrapper">
+                    <i class="bi bi-person input-icon"></i>
+                    <input type="text" class="form-control" @bind="email" placeholder="Enter your email" @onkeydown="HandleKeyDown" />
                 </div>
-
-                <div class="input-group-custom">
-                    <label>كلمة المرور</label>
-                    <div class="input-container">
-                        <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                          <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM5 8h6a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/>
-                        </svg>
-                        <InputText type="@(showPassword ? "text" : "password")" class="custom-input" placeholder="••••••••" @bind-Value="loginModel.Password" />
-                        <button type="button" class="eye-btn" @onclick="() => showPassword = !showPassword">
-                            @if(showPassword) {
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/></svg>
-                            } else {
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7.028 7.028 0 0 0-2.79.588l.77.771A5.944 5.944 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.134 13.134 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755-.165.165-.337.328-.517.486l.708.709z"/><path d="M11.297 9.176a3.5 3.5 0 0 0-4.474-4.474l.823.823a2.5 2.5 0 0 1 2.829 2.829l.822.822zm-2.943 1.299.822.822a3.5 3.5 0 0 1-4.474-4.474l.823.823a2.5 2.5 0 0 0 2.829 2.829z"/><path d="M3.35 5.47c-.18.16-.353.322-.518.487A13.134 13.134 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7.029 7.029 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709zm10.296 8.884-12-12 .708-.708 12 12-.708.708z"/></svg>
-                            }
-                        </button>
-                    </div>
-                    <ValidationMessage For="() => loginModel.Password" />
-                </div>
-
-                <div class="form-actions">
-                    <label class="custom-checkbox">
-                        <input type="checkbox" @bind="rememberMe" />
-                        <span class="checkmark"></span>
-                        تذكرني
-                    </label>
-                    <a href="#" class="forgot-link">نسيت كلمة المرور؟</a>
-                </div>
-
-                <button type="submit" class="btn-gradient" disabled="@isLoading">
-                    @if (isLoading)
-                    {
-                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                        <span>جاري التحقق...</span>
-                    }
-                    else
-                    {
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-left:8px;">
-                          <path fill-rule="evenodd" d="M10.854 5.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 7.793l2.646-2.647a.5.5 0 0 1 .708 0z"/>
-                          <path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm2-1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H4z"/>
-                        </svg>
-                        <span>تسجيل الدخول</span>
-                    }
-                </button>
-            </EditForm>
-
-            <div class="divider">
-                <span>أو</span>
             </div>
 
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <div class="input-wrapper">
+                    <i class="bi bi-lock input-icon"></i>
+                    <input type="@(showPassword ? "text" : "password")" class="form-control" @bind="password" placeholder="Enter your password" @onkeydown="HandleKeyDown" />
+                    <button type="button" class="btn-toggle-pass" @onclick="() => showPassword = !showPassword">
+                        <i class="bi @(showPassword ? "bi-eye-slash" : "bi-eye")"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="options-row">
+                <label class="remember-me">
+                    <input type="checkbox" /> Remember me
+                </label>
+                <a href="/forgot-password" class="forgot-link">Forgot password?</a>
+            </div>
+
+            <button class="btn-primary" @onclick="HandleLogin" disabled="@isLoading">
+                @if (isLoading)
+                {
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <span>Signing in...</span>
+                }
+                else
+                {
+                 <i class="bi bi-box-arrow-in-right"></i>
+                <span>Sign In</span>
+                }
+            </button>
+
+            <div class="divider">OR</div>
+
+            <button class="btn-secondary" @onclick='() => Nav.NavigateTo("/register")'>
+                <i class="bi bi-person-plus"></i>
+                Create New Account
+            </button>
+        </div>
+    </div>
+</div>
 
 @code {
-    private LoginModel loginModel = new();
+    private string email = "";
+    private string password = "";
+    private string errorMessage = "";
     private bool isLoading = false;
     private bool showPassword = false;
-    private bool rememberMe = false;
-    private string? errorMessage;
-    private string? successMessage;
+
+    [Inject]
+    private AuthenticationStateProvider AuthProvider { get; set; } = default!;
+
+    private string supabaseUrl = "https://dayowfmmqtoyewjgnptf.supabase.co";
+    private string supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRheW93Zm1tcXRveWV3amducHRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwMTI4MTcsImV4cCI6MjEwNjU4ODgxN30.IcR-HI9AZOdsWyg93PURcm3riWzqzd7r0v69P0pzNTc";
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await HandleLogin();
+        }
+    }
 
     private async Task HandleLogin()
     {
         isLoading = true;
-        errorMessage = null;
-        successMessage = null;
-        StateHasChanged();
+        errorMessage = "";
 
         try
         {
-            await Task.Delay(800); // تأثير بصري لجمالية التحميل
-            var session = await SupabaseClient.Auth.SignIn(loginModel.Email, loginModel.Password);
+            var payload = new { email = email, password = password };
+            var content = new StringContent(System.Text.Json.JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json");
 
-            if (session?.User != null)
+            var request = new HttpRequestMessage(HttpMethod.Post, $"{supabaseUrl}/auth/v1/token?grant_type=password");
+            request.Headers.Add("apikey", supabaseKey);
+            request.Content = content;
+
+            var response = await Http.SendAsync(request);
+            var responseString = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
             {
-                if (rememberMe)
+                using var doc = System.Text.Json.JsonDocument.Parse(responseString);
+                var accessToken = doc.RootElement.GetProperty("access_token").GetString();
+
+                // حفظ التوكن في المتصفح (هذا ما يمنع طلب تسجيل الدخول في المرة القادمة)
+                await JS.InvokeVoidAsync("localStorage.setItem", "authToken", accessToken);
+
+                // إبلاغ النظام بأن المستخدم سجل دخوله
+                if (AuthProvider is CustomAuthenticationStateProvider customProvider)
                 {
-                    await LocalStorage.SetItemAsync("supabase_session", session.AccessToken);
+                    customProvider.MarkUserAsAuthenticated(email);
                 }
-                successMessage = "تم تسجيل الدخول بنجاح!";
-                await Task.Delay(1000);
-                Navigation.NavigateTo("/");
+
+                // تحويله للوحة التحكم
+                Nav.NavigateTo("/");
             }
             else
             {
-                errorMessage = "بيانات الدخول غير صحيحة.";
+                errorMessage = "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
             }
         }
         catch (Exception ex)
         {
-            errorMessage = ex.Message.Contains("Invalid login credentials") 
-                ? "البريد الإلكتروني أو كلمة المرور غير صحيحة." 
-                : "حدث خطأ في الاتصال بالخادم.";
+            errorMessage = $"حدث خطأ: {ex.Message}";
         }
         finally
         {
             isLoading = false;
         }
-    }
-
-    public class LoginModel
-    {
-        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "البريد الإلكتروني مطلوب")]
-        [System.ComponentModel.DataAnnotations.EmailAddress(ErrorMessage = "أدخل بريداً صحيحاً")]
-        public string Email { get; set; } = "";
-
-        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "كلمة المرور مطلوبة")]
-        [System.ComponentModel.DataAnnotations.MinLength(6, ErrorMessage = "كلمة المرور قصيرة جداً")]
-        public string Password { get; set; } = "";
     }
 }

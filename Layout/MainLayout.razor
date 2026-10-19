@@ -1,4 +1,7 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+@inject AuthenticationStateProvider AuthProvider
 
 <div class="sidebar">
     <div class="sidebar-header">
@@ -41,12 +44,30 @@
                 <div style="font-size: 11px; color: #94A3B8;">Researcher</div>
             </div>
         </div>
-        <button class="btn-logout">
+        <!-- الزر هنا في المكان الصحيح داخل القائمة الجانبية -->
+        <button class="btn-logout" @onclick="Logout">
             <i class="bi bi-box-arrow-right"></i> تسجيل الخروج
         </button>
     </div>
 </div>
 
-<div class="main-content">
+<div class="main-content" style="flex: 1; padding: 20px; background-color: #f8fafc; color: #1e293b; min-height: 100vh; overflow-y: auto;">
     @Body
 </div>
+
+@code {
+    private async Task Logout()
+    {
+        // مسح التوكن من المتصفح
+        await JS.InvokeVoidAsync("localStorage.removeItem", "authToken");
+
+        // إبلاغ النظام
+        if (AuthProvider is AIJOURNALMATCHERWEB.Services.CustomAuthenticationStateProvider customProvider)
+        {
+            customProvider.MarkUserAsLoggedOut();
+        }
+
+        // تحويل المستخدم لصفحة الدخول
+        Nav.NavigateTo("/login");
+    }
+}

@@ -1,2 +1,240 @@
 ﻿@page "/about"
-<h3>حول التطبيق</h3>
+
+<PageTitle>حول التطبيق | AI Journal Matcher</PageTitle>
+
+<style>
+    .about-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #1E293B;
+    }
+
+    /* البطاقة الرئيسية للملف الشخصي */
+    .profile-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        overflow: hidden;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .profile-header-bg {
+        height: 120px;
+        background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #EC4899 100%);
+    }
+
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        background: #F8FAFC;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 50px;
+        font-weight: bold;
+        color: #6366F1;
+        margin: -60px auto 15px;
+        border: 5px solid white;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .profile-info {
+        padding: 0 20px 30px;
+    }
+
+    .profile-name {
+        font-size: 28px;
+        font-weight: 800;
+        margin: 0;
+    }
+
+    .profile-title {
+        font-size: 16px;
+        color: #64748B;
+        font-weight: 600;
+        margin: 5px 0 15px;
+    }
+
+    .profile-bio {
+        font-size: 14px;
+        color: #475569;
+        line-height: 1.6;
+        max-width: 600px;
+        margin: 0 auto 20px;
+    }
+
+    /* المهارات */
+    .skills-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 25px;
+    }
+
+    .skill-badge {
+        background: #EEF2FF;
+        color: #6366F1;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: bold;
+        border: 1px solid #C7D2FE;
+    }
+
+    /* أزرار التواصل */
+    .contact-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    .contact-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 24px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: bold;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-whatsapp {
+        background: #25D366;
+        color: white;
+    }
+
+        .btn-whatsapp:hover {
+            background: #1EBE57;
+            color: white;
+            box-shadow: 0 6px 15px rgba(37, 211, 102, 0.4);
+        }
+
+    .btn-email {
+        background: #EA4335;
+        color: white;
+    }
+
+        .btn-email:hover {
+            background: #D3382B;
+            color: white;
+            box-shadow: 0 6px 15px rgba(234, 67, 53, 0.4);
+        }
+
+    .btn-call {
+        background: #3B82F6;
+        color: white;
+    }
+
+        .btn-call:hover {
+            background: #2563EB;
+            color: white;
+            box-shadow: 0 6px 15px rgba(59, 130, 246, 0.4);
+        }
+
+    /* قسم عن التطبيق */
+    .app-info-card {
+        background: white;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .section-title {
+        font-size: 20px;
+        font-weight: bold;
+        color: #1E293B;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+        border-bottom: 2px solid #F1F5F9;
+        padding-bottom: 10px;
+    }
+
+    .app-info-card p {
+        font-size: 14px;
+        color: #475569;
+        line-height: 1.8;
+        margin-bottom: 15px;
+    }
+</style>
+
+<div class="about-container">
+
+    <!-- بطاقة المبرمج -->
+    <div class="profile-card">
+        <div class="profile-header-bg"></div>
+        <div class="profile-avatar">Q</div>
+        <div class="profile-info">
+            <h1 class="profile-name">قاسم موسى رزيج</h1>
+            <div class="profile-title">طالب دكتوراه | مبرمج ومطور أنظمة</div>
+
+            <p class="profile-bio">
+                مطور شغوف ببناء الحلول البرمجية المتكاملة. أجمع بين الخبرة الأكاديمية والبرمجية لتطوير أدوات تسهل عمل الباحثين وتخدم المجتمع الأكاديمي.
+            </p>
+
+            <!-- المهارات التقنية -->
+            <div class="skills-container">
+                <span class="skill-badge">C#</span>
+                <span class="skill-badge">.NET / Blazor</span>
+                <span class="skill-badge">Flutter</span>
+                <span class="skill-badge">Oracle DB</span>
+                <span class="skill-badge">SQL Server</span>
+                <span class="skill-badge">VS Code</span>
+                <span class="skill-badge">AI Integration</span>
+            </div>
+
+            <!-- أزرار التواصل المباشر -->
+            <div class="contact-buttons">
+                <!-- زر الواتساب: يفتح المحادثة مباشرة مع رمز الدولة 964 -->
+                <a href="https://wa.me/9647717212101?text=مرحباً%20قاسم،%20لدي%20استفسار%20حول%20تطبيق%20AI%20Journal%20Matcher" target="_blank" class="contact-btn btn-whatsapp">
+                    <i class="bi bi-whatsapp"></i> محادثة واتساب
+                </a>
+
+                <!-- زر البريد الإلكتروني -->
+                <a href="mailto:qassim.alsultany@gmail.com?subject=استفسار%20حول%20تطبيق%20AI%20Journal%20Matcher" class="contact-btn btn-email">
+                    <i class="bi bi-envelope-fill"></i> أرسل بريد إلكتروني
+                </a>
+
+                <!-- زر الاتصال الهاتفي -->
+                <a href="tel:+9647717212101" class="contact-btn btn-call">
+                    <i class="bi bi-telephone-fill"></i> اتصال مباشر
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- بطاقة عن التطبيق -->
+    <div class="app-info-card">
+        <div class="section-title">
+            <i class="bi bi-info-circle-fill" style="color: #6366F1;"></i>
+            عن تطبيق AI Journal Matcher
+        </div>
+
+        <p>
+            هو نظام ذكي متكامل يهدف إلى مساعدة الباحثين والأكاديميين في العثور على المجلات العلمية المناسبة لنشر أبحاثهم بأسرع وقت وأقل جهد. يعتمد النظام على تقنيات الذكاء الاصطناعي لمطابقة الكلمات المفتاحية والملخصات البحثية مع نطاق (Scope) المجلات العلمية العالمية والمحلية.
+        </p>
+
+        <div class="section-title" style="margin-top: 25px;">
+            <i class="bi bi-check-circle-fill" style="color: #16A34A;"></i>
+            المميزات الرئيسية
+        </div>
+        <ul style="list-style-type: none; padding-right: 0; font-size: 14px; color: #475569; line-height: 2;">
+            <li><i class="bi bi-check2" style="color: #16A34A; font-weight: bold;"></i> مطابقة ذكية تعتمد على خوارزميات متقدمة.</li>
+            <li><i class="bi bi-check2" style="color: #16A34A; font-weight: bold;"></i> قاعدة بيانات شاملة للمجلات العراقية والعالمية (Scopus, Clarivate).</li>
+            <li><i class="bi bi-check2" style="color: #16A34A; font-weight: bold;"></i> إحصائيات دقيقة حول معامل التأثير وتصنيف الأرباع (Quartiles).</li>
+            <li><i class="bi bi-check2" style="color: #16A34A; font-weight: bold;"></i> واجهة مستخدم عصرية وتجربة استخدام سلسة.</li>
+        </ul>
+    </div>
+
+</div>
