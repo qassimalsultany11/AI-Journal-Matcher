@@ -6,7 +6,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
 
     <WasmInlineBootConfig>false</WasmInlineBootConfig>
-    
     <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
   </PropertyGroup>
 
