@@ -1,0 +1,532 @@
+﻿@page "/edit-profile"
+@using System.Text.Json
+@using System.Text
+@inject HttpClient Http
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<PageTitle>تعديل الملف الشخصي | AI Journal Matcher</PageTitle>
+
+<style>
+    .edit-profile-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 25px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #1E293B;
+    }
+
+    .page-header {
+        margin-bottom: 30px;
+        background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+        padding: 20px;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+        .page-header h2 {
+            font-size: 26px;
+            font-weight: 800;
+            margin: 0;
+            background: linear-gradient(90deg, #4F46E5, #9333EA);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+    .form-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+        padding: 30px;
+        border: 1px solid #E2E8F0;
+    }
+
+    .section-title {
+        font-size: 16px;
+        font-weight: 800;
+        color: #6366F1;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #EEF2FF;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .full-width {
+        grid-column: 1 / -1;
+    }
+
+    .form-label {
+        font-size: 13px;
+        font-weight: 700;
+        color: #334155;
+        margin-bottom: 8px;
+    }
+
+        .form-label .required {
+            color: #EF4444;
+            margin-right: 3px;
+        }
+
+    .form-control {
+        padding: 12px 16px;
+        border: 2px solid #E2E8F0;
+        border-radius: 10px;
+        font-size: 14px;
+        transition: all 0.2s;
+        font-family: inherit;
+        background: #F8FAFC;
+    }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #6366F1;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .btn-generate-bio {
+        background: #EEF2FF;
+        color: #4338CA;
+        border: 1px solid #C7D2FE;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 8px;
+        align-self: flex-start;
+        transition: 0.2s;
+    }
+
+        .btn-generate-bio:hover {
+            background: #C7D2FE;
+        }
+
+    .form-actions {
+        margin-top: 30px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 15px;
+        padding-top: 20px;
+        border-top: 1px solid #E2E8F0;
+    }
+
+    .btn {
+        padding: 12px 24px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border: none;
+        transition: all 0.2s;
+    }
+
+    .btn-cancel {
+        background: #F1F5F9;
+        color: #475569;
+    }
+
+        .btn-cancel:hover {
+            background: #E2E8F0;
+        }
+
+    .btn-save {
+        background: linear-gradient(135deg, #6366F1, #8B5CF6);
+        color: white;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+        }
+
+        .btn-save:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+    .alert {
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        font-weight: 600;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .alert-error {
+        background: #FEF2F2;
+        color: #DC2626;
+        border: 1px solid #FECACA;
+    }
+
+    .alert-success {
+        background: #DCFCE7;
+        color: #166534;
+        border: 1px solid #BBF7D0;
+    }
+
+    @@media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="edit-profile-container">
+    <div class="page-header">
+        <div>
+            <h2>✏️ تعديل الملف الشخصي</h2>
+            <p style="color: #64748B; margin: 5px 0 0 0; font-size: 14px;">قم بتحديث بياناتك الأكاديمية والشخصية هنا</p>
+        </div>
+        <a href="/manage-researchers" class="btn btn-cancel" style="text-decoration: none;">
+            <i class="bi bi-arrow-right"></i> العودة للقائمة
+        </a>
+    </div>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-error">
+            <i class="bi bi-exclamation-triangle-fill"></i> @errorMessage
+        </div>
+    }
+
+    @if (showSuccess)
+    {
+        <div class="alert alert-success">
+            <i class="bi bi-check-circle-fill"></i> تم حفظ التعديلات بنجاح! جاري تحويلك...
+        </div>
+    }
+
+    @if (isLoading)
+    {
+        <div style="text-align: center; padding: 50px;">
+            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
+            <p style="margin-top: 15px; color: #64748B;">جاري تحميل البيانات...</p>
+        </div>
+    }
+    else
+    {
+        <div class="form-card">
+            <!-- القسم الأول: المعلومات الأساسية -->
+            <div class="section-title">
+                <i class="bi bi-person-badge"></i> المعلومات الأساسية
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label"><span class="required">*</span> الاسم الكامل</label>
+                    <input type="text" class="form-control" @bind="user.full_name" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label"><span class="required">*</span> اسم المستخدم</label>
+                    <input type="text" class="form-control" @bind="user.username" />
+                </div>
+
+                <div class="form-group full-width">
+                    <label class="form-label"><span class="required">*</span> البريد الإلكتروني</label>
+                    <input type="email" class="form-control" @bind="user.email" />
+                </div>
+            </div>
+
+            <!-- القسم الثاني: المعلومات الأكاديمية -->
+            <div class="section-title" style="margin-top: 30px;">
+                <i class="bi bi-mortarboard"></i> المعلومات الأكاديمية
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">الجامعة / المؤسسة</label>
+                    <input type="text" class="form-control" @bind="user.university" placeholder="مثال: University of Baghdad" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">التخصص</label>
+                    <input type="text" class="form-control" @bind="user.specialization" placeholder="مثال: Computer Science" />
+                </div>
+            </div>
+
+            <!-- القسم الثالث: معلومات التواصل -->
+            <div class="section-title" style="margin-top: 30px;">
+                <i class="bi bi-telephone"></i> معلومات التواصل
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">رقم الهاتف</label>
+                    <input type="text" class="form-control" @bind="user.phone" placeholder="+964..." />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">رقم الواتساب</label>
+                    <input type="text" class="form-control" @bind="user.whatsapp" placeholder="+964..." />
+                </div>
+            </div>
+
+            <!-- القسم الرابع: الروابط الأكاديمية -->
+            <div class="section-title" style="margin-top: 30px;">
+                <i class="bi bi-link-45deg"></i> الروابط الأكاديمية
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">ORCID ID</label>
+                    <input type="text" class="form-control" @bind="user.orcid" placeholder="0000-0000-0000-0000" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Google Scholar</label>
+                    <input type="text" class="form-control" @bind="user.google_scholar" placeholder="رابط حسابك" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">ResearchGate</label>
+                    <input type="text" class="form-control" @bind="user.researchgate" placeholder="رابط حسابك" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">LinkedIn</label>
+                    <input type="text" class="form-control" @bind="user.linkedin" placeholder="رابط حسابك" />
+                </div>
+            </div>
+
+            <!-- القسم الخامس: النبذة الشخصية -->
+            <div class="section-title" style="margin-top: 30px;">
+                <i class="bi bi-file-text"></i> النبذة الشخصية (Bio)
+            </div>
+
+            <div class="form-group full-width">
+                <label class="form-label">نبذة مختصرة</label>
+                <textarea class="form-control" @bind="user.bio" placeholder="اكتب نبذة عنك..."></textarea>
+                <button class="btn-generate-bio" @onclick="GenerateBio">
+                    <i class="bi bi-magic"></i> توليد نبذة بالذكاء الاصطناعي
+                </button>
+            </div>
+
+            <!-- أزرار الإجراءات -->
+            <div class="form-actions">
+                <button class="btn btn-cancel" @onclick='() => Nav.NavigateTo("/manage-researchers")'>
+                    <i class="bi bi-x-lg"></i> إلغاء
+                </button>
+                <button class="btn btn-save" @onclick="SaveProfile" disabled="@isSaving">
+                    @if (isSaving)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        <span>جاري الحفظ...</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-check2-circle"></i>
+                        <span>حفظ التعديلات</span>
+                    }
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public long? id { get; set; }
+
+    private bool isLoading = true;
+    private bool isSaving = false;
+    private bool showSuccess = false;
+    private string errorMessage = "";
+
+    private UserProfile user = new();
+
+    private string supabaseUrl = "https://dayowfmmqtoyewjgnptf.supabase.co";
+    private string supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRheW93Zm1tcXRveWV3amducHRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwMTI4MTcsImV4cCI6MjEwNjU4ODgxN30.IcR-HI9AZOdsWyg93PURcm3riWzqzd7r0v69P0pzNTc";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!id.HasValue)
+        {
+            errorMessage = "معرف المستخدم غير موجود في الرابط.";
+            isLoading = false;
+            return;
+        }
+
+        // التحقق من الصلاحية (هل هذا المستخدم هو نفسه المسجل دخوله؟)
+        var currentUserId = await JS.InvokeAsync<string>("localStorage.getItem", "userId");
+        if (currentUserId != id.Value.ToString())
+        {
+            errorMessage = "لا يمكنك تعديل بيانات باحث آخر.";
+            isLoading = false;
+            return;
+        }
+
+        await LoadUserDataAsync(id.Value);
+    }
+
+    private async Task LoadUserDataAsync(long userId)
+    {
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{supabaseUrl}/rest/v1/users?id=eq.{userId}&select=*");
+            request.Headers.Add("apikey", supabaseKey);
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
+
+            var response = await Http.SendAsync(request);
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                var users = JsonSerializer.Deserialize<List<UserProfile>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                if (users != null && users.Count > 0)
+                {
+                    user = users[0];
+                }
+                else
+                {
+                    errorMessage = "لم يتم العثور على بيانات المستخدم.";
+                }
+            }
+            else
+            {
+                errorMessage = "حدث خطأ أثناء تحميل البيانات.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"خطأ: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void GenerateBio()
+    {
+        if (string.IsNullOrWhiteSpace(user.specialization))
+        {
+            errorMessage = "الرجاء إدخال التخصص أولاً لتوليد نبذة دقيقة.";
+            return;
+        }
+
+        string uni = string.IsNullOrWhiteSpace(user.university) ? "الجامعة" : user.university;
+
+        user.bio = $"باحث في مجال {user.specialization}، يعمل حالياً في {uni}. " +
+                           $"يهتم بتطوير البحث العلمي في مجالات {user.specialization} وتطبيقاتها العملية. " +
+                           $"يسعى إلى المساهمة في إنتاج معرفة علمية رصينة تخدم المجتمع الأكاديمي.";
+    }
+
+    private async Task SaveProfile()
+    {
+        errorMessage = "";
+        showSuccess = false;
+
+        if (string.IsNullOrWhiteSpace(user.full_name) ||
+            string.IsNullOrWhiteSpace(user.username) ||
+            string.IsNullOrWhiteSpace(user.email))
+        {
+            errorMessage = "الاسم الكامل واسم المستخدم والبريد الإلكتروني مطلوبة.";
+            return;
+        }
+
+        isSaving = true;
+
+        try
+        {
+            var payload = new
+            {
+                full_name = user.full_name.Trim(),
+                username = user.username.Trim(),
+                email = user.email.Trim(),
+                university = NullIfEmpty(user.university),
+                specialization = NullIfEmpty(user.specialization),
+                phone = NullIfEmpty(user.phone),
+                whatsapp = NullIfEmpty(user.whatsapp),
+                orcid = NullIfEmpty(user.orcid),
+                google_scholar = NullIfEmpty(user.google_scholar),
+                researchgate = NullIfEmpty(user.researchgate),
+                linkedin = NullIfEmpty(user.linkedin),
+                bio = NullIfEmpty(user.bio)
+            };
+
+            var json = JsonSerializer.Serialize(payload);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var request = new HttpRequestMessage(HttpMethod.Patch, $"{supabaseUrl}/rest/v1/users?id=eq.{id}");
+            request.Headers.Add("apikey", supabaseKey);
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
+            request.Headers.Add("Prefer", "return=minimal");
+            request.Content = content;
+
+            var response = await Http.SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                // تحديث الاسم في الـ LocalStorage لكي يظهر في القائمة الجانبية
+                await JS.InvokeVoidAsync("localStorage.setItem", "fullName", user.full_name);
+
+                showSuccess = true;
+                await Task.Delay(1500);
+                Nav.NavigateTo("/manage-researchers");
+            }
+            else
+            {
+                var err = await response.Content.ReadAsStringAsync();
+                errorMessage = $"فشل الحفظ: {err}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"خطأ: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private static string? NullIfEmpty(string? s) => string.IsNullOrWhiteSpace(s) ? null : s.Trim();
+
+    public class UserProfile
+    {
+        public long id { get; set; }
+        public string full_name { get; set; } = "";
+        public string username { get; set; } = "";
+        public string email { get; set; } = "";
+        public string university { get; set; } = "";
+        public string specialization { get; set; } = "";
+        public string phone { get; set; } = "";
+        public string whatsapp { get; set; } = "";
+        public string orcid { get; set; } = "";
+        public string google_scholar { get; set; } = "";
+        public string researchgate { get; set; } = "";
+        public string linkedin { get; set; } = "";
+        public string bio { get; set; } = "";
+    }
+}

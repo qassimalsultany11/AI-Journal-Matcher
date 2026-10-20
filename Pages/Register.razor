@@ -1,0 +1,491 @@
+﻿@page "/register"
+
+@attribute [AllowAnonymous]
+@using System.Text.Json
+@using System.Text
+@using System.Security.Cryptography
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+<PageTitle>إنشاء حساب | AI Journal Matcher</PageTitle>
+
+<style>
+    .register-page-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        padding: 20px;
+    }
+
+    .register-card {
+        width: 100%;
+        max-width: 550px; /* أعرض قليلاً لأن فيه حقول كثيرة */
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .register-header {
+        background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #EC4899 100%);
+        padding: 30px 20px;
+        text-align: center;
+        color: white;
+    }
+
+    .register-header-icon {
+        width: 68px;
+        height: 68px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0 auto 15px;
+        font-size: 30px;
+    }
+
+    .register-header h2 {
+        margin: 0 0 5px 0;
+        font-size: 22px;
+        font-weight: bold;
+    }
+
+    .register-header p {
+        margin: 0;
+        font-size: 12px;
+        color: #E0E7FF;
+    }
+
+    .register-body {
+        padding: 30px;
+    }
+
+    /* تقسيم الحقول لعمودين في الشاشات الكبيرة */
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+        position: relative;
+    }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+    .form-label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: #334155;
+        margin-bottom: 6px;
+    }
+
+    .input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .form-control {
+        width: 100%;
+        height: 42px;
+        padding: 0 40px;
+        font-size: 13px;
+        color: #2C3E50;
+        background: #F8FAFC;
+        border: 1.5px solid #E0E6ED;
+        border-radius: 8px;
+        transition: all 0.2s;
+        box-sizing: border-box;
+    }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #6366F1;
+            background: #FFFFFF;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+    .input-icon {
+        position: absolute;
+        left: 14px;
+        color: #94A3B8;
+        font-size: 14px;
+        pointer-events: none;
+    }
+
+    .btn-toggle-pass {
+        position: absolute;
+        right: 10px;
+        background: transparent;
+        border: none;
+        color: #94A3B8;
+        cursor: pointer;
+        font-size: 14px;
+        padding: 5px;
+    }
+
+        .btn-toggle-pass:hover {
+            color: #6366F1;
+        }
+
+    .btn-primary {
+        width: 100%;
+        height: 46px;
+        background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+        margin-top: 10px;
+    }
+
+        .btn-primary:hover {
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+    .alert-error {
+        background: #FEF2F2;
+        color: #DC2626;
+        border: 1px solid #FECACA;
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 12px;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .alert-success {
+        background: #DCFCE7;
+        color: #166534;
+        border: 1px solid #BBF7D0;
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 12px;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .login-link-container {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 13px;
+        color: #64748B;
+    }
+
+    .login-link {
+        color: #6366F1;
+        font-weight: bold;
+        text-decoration: none;
+    }
+
+        .login-link:hover {
+            text-decoration: underline;
+        }
+
+    @@media (max-width: 600px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="register-page-wrapper">
+    <div class="register-card">
+        <div class="register-header">
+            <div class="register-header-icon">
+                <i class="bi bi-person-plus"></i>
+            </div>
+            <h2>إنشاء حساب جديد</h2>
+            <p>انضم إلى منصة AI Journal Matcher</p>
+        </div>
+
+        <div class="register-body">
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert-error">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    @errorMessage
+                </div>
+            }
+
+            @if (showSuccess)
+            {
+                <div class="alert-success">
+                    <i class="bi bi-check-circle-fill"></i>
+                    تم إنشاء الحساب بنجاح! جاري تحويلك لتسجيل الدخول...
+                </div>
+            }
+
+            <div class="form-grid">
+                <!-- الاسم الكامل -->
+                <div class="form-group full-width">
+                    <label class="form-label">الاسم الكامل *</label>
+                    <div class="input-wrapper">
+                        <i class="bi bi-person input-icon"></i>
+                        <input type="text" class="form-control" @bind="fullName" placeholder="مثال: قاسم موسى" />
+                    </div>
+                </div>
+
+                <!-- اسم المستخدم -->
+                <div class="form-group">
+                    <label class="form-label">اسم المستخدم *</label>
+                    <div class="input-wrapper">
+                        <i class="bi bi-at input-icon"></i>
+                        <input type="text" class="form-control" @bind="username" placeholder="qasim_m" />
+                    </div>
+                </div>
+
+                <!-- البريد الإلكتروني -->
+                <div class="form-group">
+                    <label class="form-label">البريد الإلكتروني *</label>
+                    <div class="input-wrapper">
+                        <i class="bi bi-envelope input-icon"></i>
+                        <input type="email" class="form-control" @bind="email" placeholder="email@example.com" />
+                    </div>
+                </div>
+
+                <!-- كلمة المرور -->
+                <div class="form-group">
+                    <label class="form-label">كلمة المرور *</label>
+                    <div class="input-wrapper">
+                        <i class="bi bi-lock input-icon"></i>
+                        <input type="@(showPassword ? "text" : "password")" class="form-control" @bind="password" placeholder="6 أحرف على الأقل" />
+                        <button type="button" class="btn-toggle-pass" @onclick="() => showPassword = !showPassword">
+                            <i class="bi @(showPassword ? "bi-eye-slash" : "bi-eye")"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- تأكيد كلمة المرور -->
+                <div class="form-group">
+                    <label class="form-label">تأكيد كلمة المرور *</label>
+                    <div class="input-wrapper">
+                        <i class="bi bi-shield-lock input-icon"></i>
+                        <input type="password" class="form-control" @bind="confirmPassword" placeholder="أعد كتابة كلمة المرور" />
+                    </div>
+                </div>
+
+                <!-- الجامعة (اختياري) -->
+                <div class="form-group">
+                    <label class="form-label">الجامعة / المؤسسة</label>
+                    <div class="input-wrapper">
+                        <i class="bi bi-building input-icon"></i>
+                        <input type="text" class="form-control" @bind="university" placeholder="مثال: University of Baghdad" />
+                    </div>
+                </div>
+
+                <!-- التخصص (اختياري) -->
+                <div class="form-group">
+                    <label class="form-label">التخصص</label>
+                    <div class="input-wrapper">
+                        <i class="bi bi-book input-icon"></i>
+                        <input type="text" class="form-control" @bind="specialization" placeholder="مثال: Computer Science" />
+                    </div>
+                </div>
+
+                <!-- رقم الواتساب (اختياري) -->
+                <div class="form-group">
+                    <label class="form-label">رقم الواتساب</label>
+                    <div class="input-wrapper">
+                        <i class="bi bi-whatsapp input-icon"></i>
+                        <input type="text" class="form-control" @bind="whatsapp" placeholder="+964 770 000 0000" />
+                    </div>
+                </div>
+
+                <!-- ORCID (اختياري) -->
+                <div class="form-group">
+                    <label class="form-label">ORCID ID</label>
+                    <div class="input-wrapper">
+                        <i class="bi bi-person-vcard input-icon"></i>
+                        <input type="text" class="form-control" @bind="orcid" placeholder="0000-0000-0000-0000" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- زر التسجيل -->
+            <button class="btn-primary" @onclick="HandleRegister" disabled="@isLoading">
+                @if (isLoading)
+                {
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <span>جاري إنشاء الحساب...</span>
+                }
+                else
+                {
+                    <i class="bi bi-check2-circle"></i>
+                    <span>إنشاء الحساب</span>
+                }
+            </button>
+
+            <div class="login-link-container">
+                لديك حساب بالفعل؟ <a href="/login" class="login-link">تسجيل الدخول</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    // المتغيرات
+    private string fullName = "";
+    private string username = "";
+    private string email = "";
+    private string password = "";
+    private string confirmPassword = "";
+    private string university = "";
+    private string specialization = "";
+    private string whatsapp = "";
+    private string orcid = "";
+
+    private string errorMessage = "";
+    private bool isLoading = false;
+    private bool showPassword = false;
+    private bool showSuccess = false;
+
+    private string supabaseUrl = "https://dayowfmmqtoyewjgnptf.supabase.co";
+    private string supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRheW93Zm1tcXRveWV3amducHRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwMTI4MTcsImV4cCI6MjEwNjU4ODgxN30.IcR-HI9AZOdsWyg93PURcm3riWzqzd7r0v69P0pzNTc";
+
+    private async Task HandleRegister()
+    {
+        errorMessage = "";
+        showSuccess = false;
+
+        // 1. التحقق من الحقول الإجبارية
+        if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(username) ||
+            string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+        {
+            errorMessage = "الرجاء ملء جميع الحقول الإجبارية (*).";
+            return;
+        }
+
+        if (password != confirmPassword)
+        {
+            errorMessage = "كلمتا المرور غير متطابقتين.";
+            return;
+        }
+
+        if (password.Length < 6)
+        {
+            errorMessage = "كلمة المرور يجب أن تكون 6 أحرف على الأقل.";
+            return;
+        }
+
+        isLoading = true;
+
+        try
+        {
+            // 2. فحص ما إذا كان البريد الإلكتروني أو اسم المستخدم موجود مسبقاً
+            var checkRequest = new HttpRequestMessage(HttpMethod.Get, $"{supabaseUrl}/rest/v1/users?or=(email.eq.{Uri.EscapeDataString(email)},username.eq.{Uri.EscapeDataString(username)})&select=email,username");
+            checkRequest.Headers.Add("apikey", supabaseKey);
+            checkRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
+
+            var checkResponse = await Http.SendAsync(checkRequest);
+            if (checkResponse.IsSuccessStatusCode)
+            {
+                var checkJson = await checkResponse.Content.ReadAsStringAsync();
+                if (checkJson.Trim() != "[]")
+                {
+                    errorMessage = "البريد الإلكتروني أو اسم المستخدم مسجل مسبقاً. الرجاء اختيار غيره.";
+                    isLoading = false;
+                    return;
+                }
+            }
+
+            // 3. تشفير كلمة المرور (نستخدم SHA256 كما في صفحة تسجيل الدخول)
+            string hashedPassword = HashPassword(password);
+
+            // 4. تجهيز البيانات للإرسال
+            var newUser = new
+            {
+                username = username.Trim(),
+                email = email.Trim().ToLower(),
+                password_hash = hashedPassword,
+                full_name = fullName.Trim(),
+                role = "researcher", // الصلاحية الافتراضية
+                university = string.IsNullOrWhiteSpace(university) ? null : university.Trim(),
+                specialization = string.IsNullOrWhiteSpace(specialization) ? null : specialization.Trim(),
+                whatsapp = string.IsNullOrWhiteSpace(whatsapp) ? null : whatsapp.Trim(),
+                orcid = string.IsNullOrWhiteSpace(orcid) ? null : orcid.Trim(),
+                profile_completed = false
+            };
+
+            var json = JsonSerializer.Serialize(newUser);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            // 5. إرسال البيانات إلى Supabase
+            var request = new HttpRequestMessage(HttpMethod.Post, $"{supabaseUrl}/rest/v1/users");
+            request.Headers.Add("apikey", supabaseKey);
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
+            request.Headers.Add("Prefer", "return=minimal");
+            request.Content = content;
+
+            var response = await Http.SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                showSuccess = true;
+                await Task.Delay(2000); // انتظار ثانيتين
+                Nav.NavigateTo("/login"); // التحويل لصفحة الدخول
+            }
+            else
+            {
+                var err = await response.Content.ReadAsStringAsync();
+                errorMessage = $"حدث خطأ أثناء إنشاء الحساب: {err}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"خطأ غير متوقع: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    // دالة التشفير (يجب أن تتطابق مع دالة التحقق في صفحة تسجيل الدخول)
+    private string HashPassword(string password)
+    {
+        using (var sha256 = SHA256.Create())
+        {
+            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+            return Convert.ToBase64String(hashedBytes);
+        }
+    }
+}

@@ -3,48 +3,64 @@
 @inject HttpClient Http
 @inject NavigationManager Nav
 
-<PageTitle>إضافة مجلة جديدة | AI Journal Matcher</PageTitle>
+<PageTitle>@(IsEditMode ? "تعديل مجلة" : "إضافة مجلة جديدة") | AI Journal Matcher</PageTitle>
 
 <style>
+    :root {
+        --primary: #6366F1;
+        --primary-hover: #4F46E5;
+        --bg-color: #F8FAFC;
+        --text-main: #1E293B;
+        --text-muted: #64748B;
+        --border-color: #E2E8F0;
+    }
+
     .add-journal-container {
-        max-width: 900px;
+        max-width: 950px;
         margin: 0 auto;
         padding: 20px;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        color: #1E293B;
+        color: var(--text-main);
     }
 
     .page-header {
         margin-bottom: 30px;
+        background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+        padding: 20px;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     }
 
         .page-header h2 {
-            font-size: 26px;
+            font-size: 28px;
             font-weight: 800;
             margin: 0;
+            background: linear-gradient(90deg, #4F46E5, #9333EA);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .page-header p {
-            color: #64748B;
+            color: var(--text-muted);
             margin: 5px 0 0 0;
-            font-size: 14px;
+            font-size: 15px;
         }
 
     .form-card {
         background: white;
         border-radius: 16px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
         padding: 30px;
-        border: 1px solid #F1F5F9;
+        border: 1px solid var(--border-color);
     }
 
     .section-title {
         font-size: 16px;
-        font-weight: 700;
-        color: #6366F1;
+        font-weight: 800;
+        color: var(--primary);
         margin-bottom: 20px;
         padding-bottom: 10px;
-        border-bottom: 1px solid #F1F5F9;
+        border-bottom: 2px solid #EEF2FF;
         display: flex;
         align-items: center;
         gap: 8px;
@@ -66,8 +82,8 @@
     }
 
     .form-label {
-        font-size: 13px;
-        font-weight: 600;
+        font-size: 14px;
+        font-weight: 700;
         color: #334155;
         margin-bottom: 8px;
     }
@@ -78,23 +94,25 @@
         }
 
     .form-control {
-        padding: 12px;
-        border: 1.5px solid #E2E8F0;
-        border-radius: 8px;
-        font-size: 14px;
+        padding: 12px 16px;
+        border: 2px solid var(--border-color);
+        border-radius: 10px;
+        font-size: 14.5px;
         transition: all 0.2s;
         font-family: inherit;
+        background: var(--bg-color);
     }
 
         .form-control:focus {
             outline: none;
-            border-color: #6366F1;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
         }
 
     textarea.form-control {
         resize: vertical;
-        min-height: 100px;
+        min-height: 120px;
     }
 
     .form-actions {
@@ -103,20 +121,20 @@
         justify-content: flex-end;
         gap: 15px;
         padding-top: 20px;
-        border-top: 1px solid #F1F5F9;
+        border-top: 1px solid var(--border-color);
     }
 
     .btn {
-        padding: 12px 24px;
+        padding: 12px 28px;
         border-radius: 10px;
-        font-size: 14px;
+        font-size: 15px;
         font-weight: bold;
         cursor: pointer;
         display: flex;
         align-items: center;
         gap: 8px;
         border: none;
-        transition: all 0.2s;
+        transition: all 0.3s ease;
     }
 
     .btn-cancel {
@@ -129,29 +147,32 @@
         }
 
     .btn-save {
-        background: #6366F1;
+        background: linear-gradient(135deg, #6366F1, #8B5CF6);
         color: white;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
     }
 
         .btn-save:hover {
-            background: #4F46E5;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
         }
 
         .btn-save:disabled {
             opacity: 0.7;
             cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
 
     .alert {
-        padding: 15px;
-        border-radius: 10px;
-        margin-bottom: 20px;
+        padding: 16px;
+        border-radius: 12px;
+        margin-bottom: 25px;
         font-weight: 600;
-        font-size: 14px;
+        font-size: 15px;
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
     }
 
     .alert-error {
@@ -166,6 +187,23 @@
         border: 1px solid #BBF7D0;
     }
 
+    .spinner-border {
+        display: inline-block;
+        width: 1rem;
+        height: 1rem;
+        vertical-align: text-bottom;
+        border: 0.2em solid currentColor;
+        border-right-color: transparent;
+        border-radius: 50%;
+        animation: spinner-border .75s linear infinite;
+    }
+
+    @@keyframes spinner-border {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
     @@media (max-width: 768px) {
         .form-grid {
             grid-template-columns: 1fr;
@@ -176,21 +214,22 @@
 <div class="add-journal-container">
 
     <div class="page-header">
-        <h2>➕ إضافة مجلة جديدة</h2>
-        <p>أدخل بيانات المجلة الأكاديمية لإضافتها إلى قاعدة البيانات</p>
+        <h2>@(IsEditMode ? "✏️ تعديل بيانات المجلة" : "➕ إضافة مجلة جديدة")</h2>
+        <p>@(IsEditMode ? "قم بتحديث البيانات المطلوبة ثم اضغط حفظ التعديلات" : "أدخل بيانات المجلة الأكاديمية لإضافتها إلى قاعدة البيانات")</p>
     </div>
 
     @if (!string.IsNullOrEmpty(errorMessage))
     {
         <div class="alert alert-error">
-            <i class="bi bi-exclamation-triangle-fill"></i> @errorMessage
+            <i class="bi bi-exclamation-triangle-fill" style="font-size: 20px;"></i> @errorMessage
         </div>
     }
 
     @if (showSuccess)
     {
         <div class="alert alert-success">
-            <i class="bi bi-check-circle-fill"></i> تم إضافة المجلة بنجاح! جاري تحويلك...
+            <i class="bi bi-check-circle-fill" style="font-size: 20px;"></i>
+            @(IsEditMode ? "تم تعديل المجلة بنجاح! جاري تحويلك..." : "تم إضافة المجلة بنجاح! جاري تحويلك...")
         </div>
     }
 
@@ -224,8 +263,8 @@
         </div>
 
         <!-- القسم الثاني: التصنيف والنشر -->
-        <div class="section-title" style="margin-top: 30px;">
-            <i class="bi bi-bar-chart"></i> التصنيف والنشر
+        <div class="section-title" style="margin-top: 35px;">
+            <i class="bi bi-bar-chart-line"></i> التصنيف والنشر
         </div>
 
         <div class="form-grid">
@@ -257,7 +296,7 @@
         </div>
 
         <!-- القسم الثالث: التفاصيل الأكاديمية -->
-        <div class="section-title" style="margin-top: 30px;">
+        <div class="section-title" style="margin-top: 35px;">
             <i class="bi bi-journal-text"></i> التفاصيل الأكاديمية
         </div>
 
@@ -270,25 +309,25 @@
             <div class="form-group full-width">
                 <label class="form-label">الكلمات المفتاحية (Keywords)</label>
                 <input type="text" class="form-control" @bind="keywordsInput" placeholder="افصل بين الكلمات بفاصلة (مثال: Engineering, AI, Sustainable Development)" />
-                <small style="color: #94A3B8; margin-top: 5px;">سيتم حفظها كمصفوفة في قاعدة البيانات.</small>
+                <small style="color: #94A3B8; margin-top: 6px; font-weight: 600;">سيتم حفظها كمصفوفة في قاعدة البيانات.</small>
             </div>
         </div>
 
         <!-- أزرار الإجراءات -->
         <div class="form-actions">
-            <button class="btn btn-cancel" @onclick='() => Nav.NavigateTo("/manage-journals")'>
+            <button type="button" class="btn btn-cancel" @onclick='() => Nav.NavigateTo("/manage-journals")'>
                 <i class="bi bi-x-lg"></i> إلغاء
             </button>
-            <button class="btn btn-save" @onclick="SaveJournal" disabled="@isSaving">
+            <button type="button" class="btn btn-save" @onclick="SaveJournal" disabled="@isSaving">
                 @if (isSaving)
                 {
-                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <span class="spinner-border" role="status" aria-hidden="true"></span>
                     <span>جاري الحفظ...</span>
                 }
                 else
                 {
                     <i class="bi bi-check2-circle"></i>
-                    <span>حفظ المجلة</span>
+                    <span>@(IsEditMode ? "حفظ التعديلات" : "حفظ المجلة")</span>
                 }
             </button>
         </div>
@@ -296,6 +335,13 @@
 </div>
 
 @code {
+    // استقبال الـ ID من الرابط (إذا كان موجوداً نكون في وضع التعديل)
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public long? id { get; set; }
+
+    private bool IsEditMode => id.HasValue;
+
     private bool isSaving = false;
     private bool showSuccess = false;
     private string errorMessage = "";
@@ -306,6 +352,55 @@
 
     private string supabaseUrl = "https://dayowfmmqtoyewjgnptf.supabase.co";
     private string supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRheW93Zm1tcXRveWV3amducHRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwMTI4MTcsImV4cCI6MjEwNjU4ODgxN30.IcR-HI9AZOdsWyg93PURcm3riWzqzd7r0v69P0pzNTc";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (IsEditMode)
+        {
+            await LoadJournalDataAsync(id!.Value);
+        }
+    }
+
+    // دالة جلب بيانات المجلة عند التعديل
+    private async Task LoadJournalDataAsync(long journalId)
+    {
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{supabaseUrl}/rest/v1/journals?id=eq.{journalId}&select=*");
+            request.Headers.Add("apikey", supabaseKey);
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
+
+            var response = await Http.SendAsync(request);
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                var journals = JsonSerializer.Deserialize<List<JournalModel>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (journals != null && journals.Count > 0)
+                {
+                    journal = journals[0];
+
+                    // تحويل مصفوفة الكلمات المفتاحية إلى نص مفصول بفواصل لكي تظهر في الحقل
+                    if (journal.keywords != null && journal.keywords.Length > 0)
+                    {
+                        keywordsInput = string.Join(", ", journal.keywords);
+                    }
+                }
+                else
+                {
+                    errorMessage = "لم يتم العثور على المجلة المطلوبة.";
+                }
+            }
+            else
+            {
+                errorMessage = "حدث خطأ أثناء جلب بيانات المجلة.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"خطأ غير متوقع: {ex.Message}";
+        }
+    }
 
     private async Task SaveJournal()
     {
@@ -338,17 +433,32 @@
                 journal.keywords = Array.Empty<string>();
             }
 
-            // إضافة اسم المستخدم الذي أضاف المجلة (يمكنك تعديله لاحقاً ليجلب من الجلسة)
-            journal.added_by = "قاسم موسى";
+            // إضافة اسم المستخدم إذا كنا في وضع الإضافة فقط
+            if (!IsEditMode)
+            {
+                journal.added_by = "قاسم موسى"; // يمكنك تعديله لاحقاً ليجلب من الجلسة
+            }
 
             var json = JsonSerializer.Serialize(journal);
             var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
 
-            // إرسال البيانات إلى Supabase
-            var request = new HttpRequestMessage(HttpMethod.Post, $"{supabaseUrl}/rest/v1/journals");
+            HttpRequestMessage request;
+
+            if (IsEditMode)
+            {
+                // وضع التعديل: استخدام PATCH مع تحديد الـ ID
+                request = new HttpRequestMessage(HttpMethod.Patch, $"{supabaseUrl}/rest/v1/journals?id=eq.{id}");
+                request.Headers.Add("Prefer", "return=minimal");
+            }
+            else
+            {
+                // وضع الإضافة: استخدام POST
+                request = new HttpRequestMessage(HttpMethod.Post, $"{supabaseUrl}/rest/v1/journals");
+                request.Headers.Add("Prefer", "return=minimal");
+            }
+
             request.Headers.Add("apikey", supabaseKey);
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
-            request.Headers.Add("Prefer", "return=minimal");
             request.Content = content;
 
             var response = await Http.SendAsync(request);
@@ -379,6 +489,7 @@
     // كلاس يمثل بنية جدول journals في Supabase
     public class JournalModel
     {
+        public long id { get; set; } // ضروري جداً لعملية التعديل
         public string name { get; set; } = "";
         public string publisher { get; set; } = "";
         public string country { get; set; } = "";

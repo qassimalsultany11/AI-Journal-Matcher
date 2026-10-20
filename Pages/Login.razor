@@ -1,6 +1,9 @@
 ﻿@page "/login"
 
 @attribute [AllowAnonymous]
+@using System.Text.Json
+@using System.Text
+@using System.Security.Cryptography
 @inject HttpClient Http
 @inject IJSRuntime JS
 @inject NavigationManager Nav
@@ -10,6 +13,7 @@
 <PageTitle>تسجيل الدخول | AI Journal Matcher</PageTitle>
 
 <style>
+    /* نفس تنسيقاتك الجميلة */
     .login-page-wrapper {
         display: flex;
         justify-content: center;
@@ -30,8 +34,15 @@
     }
 
     @@keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-20px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     .login-header {
@@ -102,12 +113,12 @@
         box-sizing: border-box;
     }
 
-    .form-control:focus {
-        outline: none;
-        border-color: #6366F1;
-        background: #FFFFFF;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-    }
+        .form-control:focus {
+            outline: none;
+            border-color: #6366F1;
+            background: #FFFFFF;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
 
     .input-icon {
         position: absolute;
@@ -128,9 +139,9 @@
         padding: 5px;
     }
 
-    .btn-toggle-pass:hover {
-        color: #6366F1;
-    }
+        .btn-toggle-pass:hover {
+            color: #6366F1;
+        }
 
     .options-row {
         display: flex;
@@ -140,23 +151,15 @@
         font-size: 12px;
     }
 
-    .remember-me {
-        display: flex;
-        align-items: center;
-        color: #64748B;
-        gap: 6px;
-        cursor: pointer;
-    }
-
     .forgot-link {
         color: #6366F1;
         text-decoration: none;
         font-weight: 600;
     }
 
-    .forgot-link:hover {
-        text-decoration: underline;
-    }
+        .forgot-link:hover {
+            text-decoration: underline;
+        }
 
     .btn-primary {
         width: 100%;
@@ -175,54 +178,14 @@
         transition: all 0.2s;
     }
 
-    .btn-primary:hover {
-        box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
-    }
+        .btn-primary:hover {
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+        }
 
-    .btn-primary:disabled {
-        opacity: 0.7;
-        cursor: not-allowed;
-    }
-
-    .divider {
-        display: flex;
-        align-items: center;
-        text-align: center;
-        margin: 20px 0;
-        color: #94A3B8;
-        font-size: 11px;
-    }
-
-    .divider::before, .divider::after {
-        content: '';
-        flex: 1;
-        border-bottom: 1px solid #E2E8F0;
-    }
-
-    .divider::before { margin-right: 10px; }
-    .divider::after { margin-left: 10px; }
-
-    .btn-secondary {
-        width: 100%;
-        height: 44px;
-        background: white;
-        color: #6366F1;
-        border: 1.5px solid #E0E6ED;
-        border-radius: 10px;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 8px;
-        transition: all 0.2s;
-    }
-
-    .btn-secondary:hover {
-        background: #F8FAFC;
-        border-color: #6366F1;
-    }
+        .btn-primary:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
 
     .alert-error {
         background: #FEF2F2;
@@ -236,6 +199,26 @@
         align-items: center;
         gap: 8px;
     }
+
+    /* تنسيق رابط إنشاء الحساب الجديد */
+    .register-link-container {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 13px;
+        color: #64748B;
+        border-top: 1px solid #E2E8F0;
+        padding-top: 20px;
+    }
+
+    .register-link {
+        color: #6366F1;
+        font-weight: bold;
+        text-decoration: none;
+    }
+
+        .register-link:hover {
+            text-decoration: underline;
+        }
 </style>
 
 <div class="login-page-wrapper">
@@ -244,8 +227,8 @@
             <div class="login-header-icon">
                 <i class="bi bi-person"></i>
             </div>
-            <h2>Welcome Back</h2>
-            <p>Sign in to AI Journal Matcher</p>
+            <h2>مرحباً بعودتك</h2>
+            <p>تسجيل الدخول إلى AI Journal Matcher</p>
         </div>
 
         <div class="login-body">
@@ -258,18 +241,18 @@
             }
 
             <div class="form-group">
-                <label class="form-label">Username or Email</label>
+                <label class="form-label">البريد الإلكتروني أو اسم المستخدم</label>
                 <div class="input-wrapper">
                     <i class="bi bi-person input-icon"></i>
-                    <input type="text" class="form-control" @bind="email" placeholder="Enter your email" @onkeydown="HandleKeyDown" />
+                    <input type="text" class="form-control" @bind="email" placeholder="أدخل بريدك الإلكتروني" @onkeydown="HandleKeyDown" />
                 </div>
             </div>
 
             <div class="form-group">
-                <label class="form-label">Password</label>
+                <label class="form-label">كلمة المرور</label>
                 <div class="input-wrapper">
                     <i class="bi bi-lock input-icon"></i>
-                    <input type="@(showPassword ? "text" : "password")" class="form-control" @bind="password" placeholder="Enter your password" @onkeydown="HandleKeyDown" />
+                    <input type="@(showPassword ? "text" : "password")" class="form-control" @bind="password" placeholder="أدخل كلمة المرور" @onkeydown="HandleKeyDown" />
                     <button type="button" class="btn-toggle-pass" @onclick="() => showPassword = !showPassword">
                         <i class="bi @(showPassword ? "bi-eye-slash" : "bi-eye")"></i>
                     </button>
@@ -277,31 +260,26 @@
             </div>
 
             <div class="options-row">
-                <label class="remember-me">
-                    <input type="checkbox" /> Remember me
-                </label>
-                <a href="/forgot-password" class="forgot-link">Forgot password?</a>
+                <a href="/forgot-password" class="forgot-link">هل نسيت كلمة المرور؟</a>
             </div>
 
             <button class="btn-primary" @onclick="HandleLogin" disabled="@isLoading">
                 @if (isLoading)
                 {
                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                    <span>Signing in...</span>
+                    <span>جاري تسجيل الدخول...</span>
                 }
                 else
                 {
-                 <i class="bi bi-box-arrow-in-right"></i>
-                <span>Sign In</span>
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    <span>تسجيل الدخول</span>
                 }
             </button>
 
-            <div class="divider">OR</div>
-
-            <button class="btn-secondary" @onclick='() => Nav.NavigateTo("/register")'>
-                <i class="bi bi-person-plus"></i>
-                Create New Account
-            </button>
+            <!-- ربط صفحة تسجيل الدخول بصفحة إنشاء الحساب -->
+            <div class="register-link-container">
+                ليس لديك حساب؟ <a href="/register" class="register-link">إنشاء حساب جديد</a>
+            </div>
         </div>
     </div>
 </div>
@@ -334,36 +312,56 @@
 
         try
         {
-            var payload = new { email = email, password = password };
-            var content = new StringContent(System.Text.Json.JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json");
-
-            var request = new HttpRequestMessage(HttpMethod.Post, $"{supabaseUrl}/auth/v1/token?grant_type=password");
+            // 1. البحث عن المستخدم في جدول public.users (بواسطة البريد الإلكتروني أو اسم المستخدم)
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{supabaseUrl}/rest/v1/users?or=(email.eq.{Uri.EscapeDataString(email)},username.eq.{Uri.EscapeDataString(email)})&select=*");
             request.Headers.Add("apikey", supabaseKey);
-            request.Content = content;
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
 
             var response = await Http.SendAsync(request);
-            var responseString = await response.Content.ReadAsStringAsync();
 
             if (response.IsSuccessStatusCode)
             {
-                using var doc = System.Text.Json.JsonDocument.Parse(responseString);
-                var accessToken = doc.RootElement.GetProperty("access_token").GetString();
+                var json = await response.Content.ReadAsStringAsync();
+                var users = JsonSerializer.Deserialize<List<UserProfile>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-                // حفظ التوكن في المتصفح (هذا ما يمنع طلب تسجيل الدخول في المرة القادمة)
-                await JS.InvokeVoidAsync("localStorage.setItem", "authToken", accessToken);
-
-                // إبلاغ النظام بأن المستخدم سجل دخوله
-                if (AuthProvider is CustomAuthenticationStateProvider customProvider)
+                if (users != null && users.Count > 0)
                 {
-                    customProvider.MarkUserAsAuthenticated(email);
-                }
+                    var user = users[0];
 
-                // تحويله للوحة التحكم
-                Nav.NavigateTo("/");
+                    // 2. التحقق من كلمة المرور (نستخدم SHA256 لكي تتطابق مع صفحة التسجيل)
+                    bool isPasswordValid = VerifyPassword(password, user.password_hash);
+
+                    if (isPasswordValid)
+                    {
+                        // حفظ بيانات المستخدم في الـ LocalStorage
+                        await JS.InvokeVoidAsync("localStorage.setItem", "authToken", "logged_in");
+                        await JS.InvokeVoidAsync("localStorage.setItem", "username", user.username);
+                        await JS.InvokeVoidAsync("localStorage.setItem", "userRole", user.role ?? "researcher");
+                        await JS.InvokeVoidAsync("localStorage.setItem", "userId", user.id.ToString());
+                        await JS.InvokeVoidAsync("localStorage.setItem", "fullName", user.full_name ?? user.username);
+
+                        // إبلاغ النظام بأن المستخدم سجل دخوله
+                        if (AuthProvider is CustomAuthenticationStateProvider customProvider)
+                        {
+                            customProvider.MarkUserAsAuthenticated(user.email);
+                        }
+
+                        // تحويله للوحة التحكم
+                        Nav.NavigateTo("/");
+                    }
+                    else
+                    {
+                        errorMessage = "كلمة المرور غير صحيحة.";
+                    }
+                }
+                else
+                {
+                    errorMessage = "البريد الإلكتروني أو اسم المستخدم غير مسجل.";
+                }
             }
             else
             {
-                errorMessage = "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
+                errorMessage = "حدث خطأ أثناء الاتصال بقاعدة البيانات.";
             }
         }
         catch (Exception ex)
@@ -374,5 +372,26 @@
         {
             isLoading = false;
         }
+    }
+
+    // دالة للتحقق من كلمة المرور (متطابقة مع صفحة التسجيل SHA256)
+    private bool VerifyPassword(string enteredPassword, string storedHash)
+    {
+        using (var sha256 = SHA256.Create())
+        {
+            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(enteredPassword));
+            var hashString = Convert.ToBase64String(hashedBytes);
+            return hashString == storedHash;
+        }
+    }
+
+    public class UserProfile
+    {
+        public long id { get; set; }
+        public string username { get; set; } = "";
+        public string email { get; set; } = "";
+        public string password_hash { get; set; } = "";
+        public string full_name { get; set; } = "";
+        public string role { get; set; } = "researcher";
     }
 }

@@ -1,6 +1,8 @@
 ﻿@page "/"
 @attribute [Authorize]
+@using System.Text.Json
 @inject HttpClient Http
+@inject IJSRuntime JS
 @implements IDisposable
 
 <PageTitle>لوحة التحكم | AI Journal Matcher</PageTitle>
@@ -8,14 +10,16 @@
 <!-- الشريط العلوي -->
 <div class="home-top-navbar" style="display: flex; justify-content: space-between; align-items: center; padding: 20px; background: white; border-bottom: 1px solid #e2e8f0;">
     <div class="welcome-section">
-        <h3 class="welcome-title" style="margin: 0; color: #1e293b;">مرحباً بعودتك، قاسم موسى رزيج! 👋</h3>
+        <!-- تم استبدال الاسم الثابت بمتغير currentUserName -->
+        <h3 class="welcome-title" style="margin: 0; color: #1e293b;">مرحباً بعودتك، @currentUserName! 👋</h3>
         <div class="welcome-subtitle" style="color: #64748b; font-size: 14px; margin-top: 4px;">نظرة عامة على المجلات الأكاديمية السحابية وإحصائيات النظام</div>
     </div>
 
     <div class="navbar-actions" style="display: flex; align-items: center; gap: 15px;">
         <div class="user-info-navbar" style="display: flex; align-items: center; gap: 8px;">
-            <div class="user-avatar-nav" style="width: 35px; height: 35px; background: #6366F1; color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold;">Q</div>
-            <span class="user-name-nav" style="font-size: 14px; font-weight: 600;">Researcher</span>
+            <!-- الحرف الأول من الاسم في الأفاتار -->
+            <div class="user-avatar-nav" style="width: 35px; height: 35px; background: #6366F1; color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold;">@currentUserInitial</div>
+            <span class="user-name-nav" style="font-size: 14px; font-weight: 600;">@currentUserRole</span>
         </div>
 
         <div class="date-time-box" style="text-align: left; font-size: 12px; color: #64748b;">
@@ -212,6 +216,12 @@ else
     private List<Journal> recentJournals = new();
     private List<PublisherStat> topPublishers = new();
     private string currentDate = "", currentTime = "";
+
+    // متغيرات المستخدم
+    private string currentUserName = "باحث"; // الافتراضي
+    private string currentUserRole = "Researcher";
+    private string currentUserInitial = "U";
+
     private Timer? _timer;
 
     private string supabaseUrl = "https://dayowfmmqtoyewjgnptf.supabase.co";
@@ -219,9 +229,49 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        // 1. جلب بيانات المستخدم من الـ LocalStorage
+        await LoadUserInfo();
+
+        // 2. تحميل بيانات لوحة التحكم
         await LoadDataAsync();
+
         UpdateTime();
         _timer = new Timer(_ => InvokeAsync(() => { UpdateTime(); StateHasChanged(); }), null, 0, 1000);
+    }
+
+    private async Task LoadUserInfo()
+    {
+        try
+        {
+            var fullName = await JS.InvokeAsync<string>("localStorage.getItem", "fullName");
+            var username = await JS.InvokeAsync<string>("localStorage.getItem", "username");
+            var role = await JS.InvokeAsync<string>("localStorage.getItem", "userRole");
+
+            // نفضل الاسم الكامل، وإذا ما موجود نستخدم اسم المستخدم
+            if (!string.IsNullOrWhiteSpace(fullName))
+            {
+                currentUserName = fullName;
+            }
+            else if (!string.IsNullOrWhiteSpace(username))
+            {
+                currentUserName = username;
+            }
+
+            if (!string.IsNullOrWhiteSpace(role))
+            {
+                currentUserRole = role == "admin" ? "Admin" : "Researcher";
+            }
+
+            // استخراج أول حرف للأفاتار
+            if (!string.IsNullOrWhiteSpace(currentUserName))
+            {
+                currentUserInitial = currentUserName.Substring(0, 1).ToUpper();
+            }
+        }
+        catch
+        {
+            // في حال عدم وجود بيانات، نستخدم القيم الافتراضية
+        }
     }
 
     private void UpdateTime()
@@ -256,14 +306,14 @@ else
             if (docAvg != null && docAvg.RootElement.GetArrayLength() > 0)
             {
                 var a = docAvg.RootElement[0].GetProperty("avg");
-                if (a.ValueKind != System.Text.Json.JsonValueKind.Null) averageImpactFactor = a.GetDouble();
+                if (a.ValueKind != JsonValueKind.Null) averageImpactFactor = a.GetDouble();
             }
 
             var docMax = await GetJsonAsync($"{supabaseUrl}/rest/v1/journals?select=impact_factor.max()");
             if (docMax != null && docMax.RootElement.GetArrayLength() > 0)
             {
                 var m = docMax.RootElement[0].GetProperty("max");
-                if (m.ValueKind != System.Text.Json.JsonValueKind.Null) maxImpactFactor = m.GetDouble();
+                if (m.ValueKind != JsonValueKind.Null) maxImpactFactor = m.GetDouble();
             }
 
             topPublishers.Clear();
@@ -281,21 +331,21 @@ else
             var docRecent = await GetJsonAsync($"{supabaseUrl}/rest/v1/journals?select=*&limit=5&order=id.desc");
             if (docRecent != null)
             {
-                recentJournals = System.Text.Json.JsonSerializer.Deserialize<List<Journal>>(docRecent.RootElement.GetRawText(), new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
+                recentJournals = JsonSerializer.Deserialize<List<Journal>>(docRecent.RootElement.GetRawText(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
             }
         }
         catch (Exception ex) { Console.WriteLine($"Error: {ex.Message}"); }
         finally { isLoading = false; }
     }
 
-    private async Task<System.Text.Json.JsonDocument?> GetJsonAsync(string url)
+    private async Task<JsonDocument?> GetJsonAsync(string url)
     {
         var req = new HttpRequestMessage(HttpMethod.Get, url);
         req.Headers.Add("apikey", supabaseKey);
         req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
         var res = await Http.SendAsync(req);
         if (!res.IsSuccessStatusCode) return null;
-        return System.Text.Json.JsonDocument.Parse(await res.Content.ReadAsStringAsync());
+        return JsonDocument.Parse(await res.Content.ReadAsStringAsync());
     }
 
     private async Task<int> GetCountAsync(string url)

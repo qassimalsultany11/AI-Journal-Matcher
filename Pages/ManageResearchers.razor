@@ -1,0 +1,631 @@
+﻿@page "/manage-researchers"
+@using System.Text.Json
+@inject HttpClient Http
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<PageTitle>إدارة الباحثين | AI Journal Matcher</PageTitle>
+
+<style>
+    /* نفس تنسيقات إدارة المجلات لجعل التصميم متناسق */
+    :root {
+        --primary: #6366F1;
+        --primary-hover: #4F46E5;
+        --bg-color: #F8FAFC;
+        --text-main: #1E293B;
+        --text-muted: #64748B;
+        --border-color: #E2E8F0;
+    }
+
+    .manage-container {
+        max-width: 100%;
+        margin: 0 auto;
+        padding: 25px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: var(--text-main);
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+        gap: 15px;
+        background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+        padding: 20px;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+        .page-header h2 {
+            font-size: 28px;
+            font-weight: 800;
+            margin: 0;
+            background: linear-gradient(90deg, #4F46E5, #9333EA);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+    .search-panel {
+        background: white;
+        padding: 24px;
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        margin-bottom: 20px;
+    }
+
+    .search-main-row {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .search-bar {
+        position: relative;
+        flex: 1;
+        min-width: 300px;
+    }
+
+        .search-bar input {
+            width: 100%;
+            padding: 14px 45px 14px 45px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+            background: var(--bg-color);
+        }
+
+            .search-bar input:focus {
+                outline: none;
+                border-color: var(--primary);
+                background: white;
+                box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+            }
+
+        .search-bar .icon-search {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94A3B8;
+            font-size: 18px;
+            pointer-events: none;
+        }
+
+    .results-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        background: white;
+        border-top: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color);
+        font-size: 14px;
+        color: var(--text-muted);
+        font-weight: 600;
+    }
+
+    .results-count {
+        color: var(--primary);
+        font-weight: 800;
+        font-size: 16px;
+    }
+
+    .table-container {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: right;
+    }
+
+    th {
+        background: #F1F5F9;
+        padding: 18px 16px;
+        font-size: 13px;
+        font-weight: 800;
+        color: #475569;
+        border-bottom: 2px solid var(--border-color);
+        white-space: nowrap;
+    }
+
+    td {
+        padding: 16px;
+        font-size: 14.5px;
+        color: var(--text-main);
+        border-bottom: 1px solid var(--border-color);
+        transition: background 0.2s;
+    }
+
+    tr:last-child td {
+        border-bottom: none;
+    }
+
+    tr:hover td {
+        background: #F8FAFC;
+    }
+
+    .badge-role {
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 800;
+        display: inline-block;
+        background: #EEF2FF;
+        color: #4338CA;
+        text-transform: capitalize;
+    }
+
+    .actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-action {
+        background: white;
+        border: 1px solid var(--border-color);
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 8px;
+        transition: all 0.2s;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-info {
+        color: #3B82F6;
+    }
+
+        .btn-info:hover {
+            background: #EFF6FF;
+            border-color: #93C5FD;
+            transform: scale(1.05);
+        }
+
+    .btn-edit {
+        color: #F59E0B;
+    }
+
+        .btn-edit:hover {
+            background: #FFFBEB;
+            border-color: #FCD34D;
+            transform: scale(1.05);
+        }
+
+    .btn-delete {
+        color: #EF4444;
+    }
+
+        .btn-delete:hover {
+            background: #FEF2F2;
+            border-color: #FCA5A5;
+            transform: scale(1.05);
+        }
+
+    /* المودال (نافذة التفاصيل) */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(4px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .modal-content {
+        background: white;
+        padding: 30px;
+        border-radius: 20px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        position: relative;
+    }
+
+    .modal-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .modal-avatar {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #6366F1, #8B5CF6);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        font-weight: bold;
+    }
+
+    .modal-body p {
+        margin: 10px 0;
+        font-size: 15px;
+        color: #475569;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .modal-body i {
+        color: var(--primary);
+        width: 20px;
+        text-align: center;
+    }
+
+    .btn-close-modal {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        background: #F1F5F9;
+        border: none;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #64748B;
+        transition: 0.2s;
+    }
+
+        .btn-close-modal:hover {
+            background: #E2E8F0;
+            color: #1E293B;
+        }
+
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #E2E8F0;
+        border-top-color: var(--primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 50px auto;
+    }
+
+    @@keyframes spin {
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+
+<div class="manage-container">
+    <div class="page-header">
+        <div>
+            <h2>👥 إدارة الباحثين</h2>
+            <p style="color: var(--text-muted); margin: 5px 0 0 0; font-size: 15px;">عرض، بحث، وتعديل حسابات الباحثين المسجلين</p>
+        </div>
+    </div>
+
+    <div class="search-panel">
+        <div class="search-main-row">
+            <div class="search-bar">
+                <i class="bi bi-search icon-search"></i>
+                <input type="text" placeholder="ابحث بالاسم، البريد الإلكتروني، الجامعة..." @bind="searchTerm" @bind:event="oninput" />
+            </div>
+        </div>
+    </div>
+
+    <div class="results-info">
+        <div>
+            إجمالي الباحثين: <span class="results-count">@FilteredResearchers.Count</span>
+        </div>
+    </div>
+
+    <div class="table-container">
+        @if (isLoading)
+        {
+            <div class="spinner"></div>
+        }
+        else if (FilteredResearchers.Count == 0)
+        {
+            <div style="text-align: center; padding: 60px 20px; color: #94A3B8;">
+                <i class="bi bi-people" style="font-size: 60px; display: block; margin-bottom: 20px; opacity: 0.5;"></i>
+                <h3 style="color: #475569;">لا يوجد باحثون لعرضهم</h3>
+            </div>
+        }
+        else
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>اسم الباحث</th>
+                        <th>البريد الإلكتروني</th>
+                        <th>الجامعة</th>
+                        <th>التخصص</th>
+                        <th>الصلاحية</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in FilteredResearchers)
+                    {
+                        <tr>
+                            <td style="font-weight: bold;">
+                                @(string.IsNullOrEmpty(user.full_name) ? user.username : user.full_name)
+                                @if (IsCurrentUser(user))
+                                {
+                                    <span style="color: #6366F1; font-size: 12px; margin-right: 5px;">(أنت)</span>
+                                }
+                            </td>
+                            <td style="color: var(--text-muted);">@user.email</td>
+                            <td style="color: var(--text-muted);">@user.university</td>
+                            <td style="color: var(--text-muted);">@user.specialization</td>
+                            <td><span class="badge-role">@user.role</span></td>
+                            <td>
+                                <div class="actions">
+                                    <!-- زر المعلومات: متاح للجميع -->
+                                    <button class="btn-action btn-info" @onclick="() => ShowUserDetails(user)" title="عرض التفاصيل">
+                                        <i class="bi bi-info-circle-fill"></i>
+                                    </button>
+
+                                    <!-- زر التعديل: يظهر فقط إذا كان هذا هو المستخدم الحالي -->
+                                    @if (IsCurrentUser(user))
+                                    {
+                                        <button class="btn-action btn-edit" @onclick="() => EditUser(user)" title="تعديل بياناتي">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </button>
+                                    }
+
+                                    <!-- زر الحذف: يظهر فقط للمشرف (Admin) -->
+                                    @if (currentUserRole == "admin")
+                                    {
+                                        <button class="btn-action btn-delete" @onclick="() => DeleteUser(user)" title="حذف">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+<!-- نافذة تفاصيل الباحث (Modal) -->
+@if (selectedUser != null)
+{
+    <div class="modal-overlay" @onclick="CloseModal">
+        <div class="modal-content" @onclick:stopPropagation="true">
+            <button class="btn-close-modal" @onclick="CloseModal"><i class="bi bi-x-lg"></i></button>
+
+            <div class="modal-header">
+                <div class="modal-avatar">
+                    @(string.IsNullOrEmpty(selectedUser.full_name) ? "?" : selectedUser.full_name[0].ToString().ToUpper())
+                </div>
+                <div>
+                    <h3 style="margin: 0; font-size: 20px;">@(string.IsNullOrEmpty(selectedUser.full_name) ? selectedUser.username : selectedUser.full_name)</h3>
+                    <span style="color: var(--primary); font-weight: bold; font-size: 14px;">@selectedUser.role</span>
+                </div>
+            </div>
+
+            <div class="modal-body">
+                <p><i class="bi bi-envelope-fill"></i> <a href="mailto:@selectedUser.email" style="text-decoration: none; color: #3B82F6;">@selectedUser.email</a></p>
+                @if (!string.IsNullOrEmpty(selectedUser.university))
+                {
+                    <p><i class="bi bi-building"></i> @selectedUser.university</p>
+                }
+                @if (!string.IsNullOrEmpty(selectedUser.specialization))
+                {
+                    <p><i class="bi bi-book"></i> @selectedUser.specialization</p>
+                }
+                @if (!string.IsNullOrEmpty(selectedUser.bio))
+                {
+                    <p><i class="bi bi-file-text"></i> @selectedUser.bio</p>
+                }
+
+                @if (!string.IsNullOrEmpty(selectedUser.whatsapp))
+                {
+                    <p>
+                        <i class="bi bi-whatsapp" style="color: #25D366;"></i>
+                        <a href="https://wa.me/@FormatPhone(selectedUser.whatsapp)" target="_blank" style="color: #25D366; font-weight: bold; text-decoration: none;">تواصل عبر واتساب</a>
+                    </p>
+                }
+                @if (!string.IsNullOrEmpty(selectedUser.orcid))
+                {
+                    <p><i class="bi bi-person-vcard" style="color: #A6CE39;"></i> <a href="https://orcid.org/@selectedUser.orcid" target="_blank" style="color: #A6CE39; text-decoration: none;">ORCID Profile</a></p>
+                }
+                @if (!string.IsNullOrEmpty(selectedUser.google_scholar))
+                {
+                    <p><i class="bi bi-google" style="color: #4285F4;"></i> <a href="@selectedUser.google_scholar" target="_blank" style="color: #4285F4; text-decoration: none;">Google Scholar</a></p>
+                }
+                @if (!string.IsNullOrEmpty(selectedUser.researchgate))
+                {
+                    <p><i class="bi bi-r-square" style="color: #00CCBB;"></i> <a href="@selectedUser.researchgate" target="_blank" style="color: #00CCBB; text-decoration: none;">ResearchGate</a></p>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool isLoading = true;
+    private string searchTerm = "";
+    private List<UserProfile> researchers = new();
+
+    // متغيرات التحقق من المستخدم الحالي
+    private long currentUserId = 0;
+    private string currentUserRole = "researcher"; // الافتراضي
+
+    // متغير لعرض المودال
+    private UserProfile? selectedUser = null;
+
+    private string supabaseUrl = "https://dayowfmmqtoyewjgnptf.supabase.co";
+    private string supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRheW93Zm1tcXRveWV3amducHRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwMTI4MTcsImV4cCI6MjEwNjU4ODgxN30.IcR-HI9AZOdsWyg93PURcm3riWzqzd7r0v69P0pzNTc";
+
+    // التحقق مما إذا كان هذا المستخدم هو المستخدم الحالي
+    private bool IsCurrentUser(UserProfile user)
+    {
+        return currentUserId > 0 && user.id == currentUserId;
+    }
+
+    private List<UserProfile> FilteredResearchers
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(searchTerm)) return researchers;
+            var term = searchTerm.ToLower();
+            return researchers.Where(r =>
+                (r.full_name?.ToLower().Contains(term) ?? false) ||
+                (r.username?.ToLower().Contains(term) ?? false) ||
+                (r.email?.ToLower().Contains(term) ?? false) ||
+                (r.university?.ToLower().Contains(term) ?? false) ||
+                (r.specialization?.ToLower().Contains(term) ?? false)
+            ).ToList();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // 1. جلب بيانات المستخدم الحالي من الـ LocalStorage أو Auth
+        await LoadCurrentUser();
+
+        // 2. جلب قائمة الباحثين
+        await LoadResearchersAsync();
+    }
+
+    private async Task LoadCurrentUser()
+    {
+        try
+        {
+            // نفترض أنك تحفظ بيانات المستخدم في LocalStorage باسم "user" أو "userId"
+            // هنا نقرأ الـ userId من الـ LocalStorage (بناءً على طريقة تسجيل الدخول اللي سويتها)
+            var savedUserId = await JS.InvokeAsync<string>("localStorage.getItem", "userId");
+            var savedUserRole = await JS.InvokeAsync<string>("localStorage.getItem", "userRole");
+
+            if (long.TryParse(savedUserId, out long parsedId))
+            {
+                currentUserId = parsedId;
+            }
+            if (!string.IsNullOrEmpty(savedUserRole))
+            {
+                currentUserRole = savedUserRole.ToLower();
+            }
+
+            // ملاحظة: إذا كنت تحفظ الإيميل بدل الـ ID، يمكنك استخدامه للمقارنة هنا.
+        }
+        catch
+        {
+            // في حال عدم وجود بيانات، يبقى currentUserId = 0 (يعني ما راح يظهر زر تعديل لحد)
+        }
+    }
+
+    private async Task LoadResearchersAsync()
+    {
+        isLoading = true;
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{supabaseUrl}/rest/v1/users?select=*&order=created_at.desc");
+            request.Headers.Add("apikey", supabaseKey);
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
+
+            var response = await Http.SendAsync(request);
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                researchers = JsonSerializer.Deserialize<List<UserProfile>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading researchers: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ShowUserDetails(UserProfile user)
+    {
+        selectedUser = user;
+    }
+
+    private void CloseModal()
+    {
+        selectedUser = null;
+    }
+
+    private void EditUser(UserProfile user)
+    {
+        // نوجه المستخدم لصفحة الإعدادات أو الملف الشخصي مع تمرير الـ ID
+        // مثلاً: Nav.NavigateTo($"/profile?id={user.id}");
+        Nav.NavigateTo($"/edit-profile?id={user.id}");
+    }
+
+    private async Task DeleteUser(UserProfile user)
+    {
+        // يمكنك إضافة تأكيد (Confirm) هنا قبل الحذف
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Delete, $"{supabaseUrl}/rest/v1/users?id=eq.{user.id}");
+            request.Headers.Add("apikey", supabaseKey);
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
+
+            var response = await Http.SendAsync(request);
+            if (response.IsSuccessStatusCode)
+            {
+                researchers.Remove(user);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting: {ex.Message}");
+        }
+    }
+
+    private string FormatPhone(string phone)
+    {
+        if (string.IsNullOrEmpty(phone)) return "";
+        var clean = phone.Replace("+", "").Replace(" ", "").Replace("-", "");
+        if (clean.StartsWith("0")) clean = "964" + clean.Substring(1);
+        return clean;
+    }
+
+    public class UserProfile
+    {
+        public long id { get; set; }
+        public string username { get; set; } = "";
+        public string email { get; set; } = "";
+        public string full_name { get; set; } = "";
+        public string role { get; set; } = "";
+        public string university { get; set; } = "";
+        public string specialization { get; set; } = "";
+        public string phone { get; set; } = "";
+        public string whatsapp { get; set; } = "";
+        public string orcid { get; set; } = "";
+        public string google_scholar { get; set; } = "";
+        public string researchgate { get; set; } = "";
+        public string linkedin { get; set; } = "";
+        public string bio { get; set; } = "";
+    }
+}
