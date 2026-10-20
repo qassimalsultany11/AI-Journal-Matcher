@@ -7,186 +7,139 @@
 
 <PageTitle>لوحة التحكم | AI Journal Matcher</PageTitle>
 
+<!-- مكتبة Chart.js للرسوم البيانية -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <!-- الشريط العلوي -->
-<div class="home-top-navbar" style="display: flex; justify-content: space-between; align-items: center; padding: 20px; background: white; border-bottom: 1px solid #e2e8f0;">
-    <div class="welcome-section">
-        <!-- تم استبدال الاسم الثابت بمتغير currentUserName -->
-        <h3 class="welcome-title" style="margin: 0; color: #1e293b;">مرحباً بعودتك، @currentUserName! 👋</h3>
-        <div class="welcome-subtitle" style="color: #64748b; font-size: 14px; margin-top: 4px;">نظرة عامة على المجلات الأكاديمية السحابية وإحصائيات النظام</div>
+<div style="display: flex; justify-content: space-between; align-items: center; padding: 20px; background: white; border-bottom: 1px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+    <div>
+        <h3 style="margin: 0; color: #1e293b; font-weight: 800;">مرحباً بعودتك، @currentUserName! 👋</h3>
+        <div style="color: #64748b; font-size: 14px; margin-top: 4px;">نظرة عامة وشاملة على إحصائيات المجلات الأكاديمية</div>
     </div>
 
-    <div class="navbar-actions" style="display: flex; align-items: center; gap: 15px;">
-        <div class="user-info-navbar" style="display: flex; align-items: center; gap: 8px;">
-            <!-- الحرف الأول من الاسم في الأفاتار -->
-            <div class="user-avatar-nav" style="width: 35px; height: 35px; background: #6366F1; color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold;">@currentUserInitial</div>
-            <span class="user-name-nav" style="font-size: 14px; font-weight: 600;">@currentUserRole</span>
+    <div style="display: flex; align-items: center; gap: 20px;">
+        <div style="text-align: left; font-size: 12px; color: #64748b; background: #F8FAFC; padding: 8px 12px; border-radius: 8px; border: 1px solid #E2E8F0;">
+            <div><i class="bi bi-calendar3"></i> @currentDate</div>
+            <div style="font-weight: bold; color: #1E293B;">@currentTime</div>
         </div>
-
-        <div class="date-time-box" style="text-align: left; font-size: 12px; color: #64748b;">
-            <div class="date-text"><i class="bi bi-calendar3"></i> @currentDate</div>
-            <div class="time-text">@currentTime</div>
-        </div>
-
-        <button class="btn-refresh" @onclick="LoadDataAsync" style="padding: 8px 16px; border-radius: 8px; background: #F1F5F9; border: none; cursor: pointer; font-weight: bold; color: #334155;">
-            <i class="bi bi-arrow-clockwise"></i> تحديث
+        <button @onclick="LoadDataAsync" style="padding: 10px 16px; border-radius: 10px; background: linear-gradient(135deg, #6366F1, #8B5CF6); border: none; cursor: pointer; font-weight: bold; color: white; display: flex; align-items: center; gap: 8px; transition: 0.2s;">
+            <i class="bi bi-arrow-clockwise"></i> تحديث البيانات
         </button>
     </div>
 </div>
 
 @if (isLoading)
 {
-    <div style="text-align: center; padding: 80px 0;">
-        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem; border: 4px solid #e2e8f0; border-top-color: #6366F1; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
-        <p style="margin-top: 20px; color: #64748B; font-weight: 600; font-size: 16px;">جاري تحميل البيانات من السحابة...</p>
+    <div style="text-align: center; padding: 100px 0;">
+        <div style="width: 3rem; height: 3rem; border: 4px solid #e2e8f0; border-top-color: #6366F1; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+        <p style="margin-top: 20px; color: #64748B; font-weight: 600;">جاري سحب الإحصائيات من السحابة...</p>
     </div>
 }
 else
 {
-    <div style="padding: 20px; background: #f8fafc; min-height: 100vh;">
-        <!-- ===== الصف الأول: البطاقات الرئيسية ===== -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 20px;">
-            <!-- إجمالي المجلات -->
-            <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
+    <div style="padding: 25px; background: #f8fafc; min-height: calc(100vh - 80px);">
+
+        <!-- ===== الصف الأول: البطاقات السريعة ===== -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 25px;">
+
+            <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                    <div style="font-size: 13px; color: #64748B; font-weight: 600;">إجمالي المجلات</div>
-                    <div style="font-size: 32px; font-weight: 800; color: #1E293B; margin-top: 6px;">@totalJournals</div>
+                    <div style="font-size: 13px; color: #64748B; font-weight: 700;">إجمالي المجلات</div>
+                    <div style="font-size: 34px; font-weight: 900; color: #1E293B; margin-top: 5px;">@totalJournals</div>
                 </div>
-                <div style="background: #EEF2FF; color: #6366F1; width: 60px; height: 60px; font-size: 28px; display: flex; justify-content: center; align-items: center; border-radius: 12px;">
+                <div style="background: #EEF2FF; color: #6366F1; width: 55px; height: 55px; font-size: 24px; display: flex; justify-content: center; align-items: center; border-radius: 12px;">
                     <i class="bi bi-journal-text"></i>
                 </div>
             </div>
 
-            <!-- المجلات العراقية -->
-            <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
+            <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                    <div style="font-size: 13px; color: #64748B; font-weight: 600;">المجلات العراقية 🇮🇶</div>
-                    <div style="font-size: 32px; font-weight: 800; color: #16A34A; margin-top: 6px;">@iraqiJournalsCount</div>
+                    <div style="font-size: 13px; color: #64748B; font-weight: 700;">المجلات العراقية 🇮🇶</div>
+                    <div style="font-size: 34px; font-weight: 900; color: #16A34A; margin-top: 5px;">@iraqiJournalsCount</div>
                 </div>
-                <div style="background: #DCFCE7; color: #16A34A; width: 60px; height: 60px; font-size: 28px; display: flex; justify-content: center; align-items: center; border-radius: 12px;">
+                <div style="background: #DCFCE7; color: #16A34A; width: 55px; height: 55px; font-size: 24px; display: flex; justify-content: center; align-items: center; border-radius: 12px;">
                     <i class="bi bi-geo-alt-fill"></i>
                 </div>
             </div>
 
-            <!-- متوسط معامل التأثير -->
-            <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
+            <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                    <div style="font-size: 13px; color: #64748B; font-weight: 600;">متوسط معامل التأثير</div>
-                    <div style="font-size: 32px; font-weight: 800; color: #D97706; margin-top: 6px;">@averageImpactFactor.ToString("0.00")</div>
+                    <div style="font-size: 13px; color: #64748B; font-weight: 700;">متوسط معامل التأثير</div>
+                    <div style="font-size: 34px; font-weight: 900; color: #D97706; margin-top: 5px;">@averageImpactFactor.ToString("0.00")</div>
                 </div>
-                <div style="background: #FEF3C7; color: #D97706; width: 60px; height: 60px; font-size: 28px; display: flex; justify-content: center; align-items: center; border-radius: 12px;">
+                <div style="background: #FEF3C7; color: #D97706; width: 55px; height: 55px; font-size: 24px; display: flex; justify-content: center; align-items: center; border-radius: 12px;">
                     <i class="bi bi-graph-up"></i>
                 </div>
             </div>
 
-            <!-- أعلى معامل تأثير -->
-            <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
+            <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                    <div style="font-size: 13px; color: #64748B; font-weight: 600;">أعلى معامل تأثير</div>
-                    <div style="font-size: 32px; font-weight: 800; color: #DB2777; margin-top: 6px;">@maxImpactFactor.ToString("0.00")</div>
+                    <div style="font-size: 13px; color: #64748B; font-weight: 700;">أعلى معامل تأثير</div>
+                    <div style="font-size: 34px; font-weight: 900; color: #DB2777; margin-top: 5px;">@maxImpactFactor.ToString("0.00")</div>
                 </div>
-                <div style="background: #FCE7F3; color: #DB2777; width: 60px; height: 60px; font-size: 28px; display: flex; justify-content: center; align-items: center; border-radius: 12px;">
+                <div style="background: #FCE7F3; color: #DB2777; width: 55px; height: 55px; font-size: 24px; display: flex; justify-content: center; align-items: center; border-radius: 12px;">
                     <i class="bi bi-trophy-fill"></i>
                 </div>
             </div>
         </div>
 
-        <!-- ===== الصف الثاني: توزيع الأرباع + الناشرون ===== -->
-        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 20px;">
-            <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                <div style="font-size: 16px; font-weight: bold; color: #1E293B; margin-bottom: 18px; display: flex; align-items: center; gap: 8px;">
-                    <i class="bi bi-bar-chart-fill" style="color: #6366F1;"></i> توزيع المجلات حسب الربع (Quartile)
+        <!-- ===== الصف الثاني: الرسوم البيانية ===== -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 25px;">
+
+            <!-- رسم دائري: توزيع الأرباع -->
+            <div style="background: white; padding: 25px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #E2E8F0;">
+                <div style="font-size: 16px; font-weight: 800; color: #1E293B; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+                    <i class="bi bi-pie-chart-fill" style="color: #6366F1;"></i> توزيع المجلات حسب الربع (Quartile)
                 </div>
-                @if (totalJournals > 0)
-                {
-                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
-                        <div style="text-align: center; padding: 15px; background: #F0FDF4; border-radius: 12px;">
-                            <div style="font-size: 12px; color: #166534; font-weight: 700;">Q1</div>
-                            <div style="font-size: 26px; font-weight: 800; color: #16A34A;">@q1Count</div>
-                            <div style="font-size: 11px; color: #64748B;">@GetPercent(q1Count)%</div>
-                        </div>
-                        <div style="text-align: center; padding: 15px; background: #EFF6FF; border-radius: 12px;">
-                            <div style="font-size: 12px; color: #1E40AF; font-weight: 700;">Q2</div>
-                            <div style="font-size: 26px; font-weight: 800; color: #3B82F6;">@q2Count</div>
-                            <div style="font-size: 11px; color: #64748B;">@GetPercent(q2Count)%</div>
-                        </div>
-                        <div style="text-align: center; padding: 15px; background: #FFFBEB; border-radius: 12px;">
-                            <div style="font-size: 12px; color: #92400E; font-weight: 700;">Q3</div>
-                            <div style="font-size: 26px; font-weight: 800; color: #F59E0B;">@q3Count</div>
-                            <div style="font-size: 11px; color: #64748B;">@GetPercent(q3Count)%</div>
-                        </div>
-                        <div style="text-align: center; padding: 15px; background: #FEF2F2; border-radius: 12px;">
-                            <div style="font-size: 12px; color: #991B1B; font-weight: 700;">Q4</div>
-                            <div style="font-size: 26px; font-weight: 800; color: #EF4444;">@q4Count</div>
-                            <div style="font-size: 11px; color: #64748B;">@GetPercent(q4Count)%</div>
-                        </div>
-                    </div>
-                    <div style="margin-top: 18px; display: flex; height: 14px; border-radius: 8px; overflow: hidden;">
-                        <div style="flex: @q1Count; background: #16A34A; min-width: 0;"></div>
-                        <div style="flex: @q2Count; background: #3B82F6; min-width: 0;"></div>
-                        <div style="flex: @q3Count; background: #F59E0B; min-width: 0;"></div>
-                        <div style="flex: @q4Count; background: #EF4444; min-width: 0;"></div>
-                    </div>
-                }
-                else
-                {
-                    <div style="text-align: center; color: #94A3B8; padding: 30px;">لا توجد بيانات</div>
-                }
+                <div style="position: relative; height: 250px; width: 100%; display: flex; justify-content: center;">
+                    <canvas id="quartileChart"></canvas>
+                </div>
             </div>
 
-            <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                <div style="font-size: 16px; font-weight: bold; color: #1E293B; margin-bottom: 18px; display: flex; align-items: center; gap: 8px;">
-                    <i class="bi bi-building" style="color: #16A34A;"></i> أكثر الناشرين تكراراً
+            <!-- رسم بياني: أكثر 5 ناشرين -->
+            <div style="background: white; padding: 25px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #E2E8F0;">
+                <div style="font-size: 16px; font-weight: 800; color: #1E293B; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+                    <i class="bi bi-bar-chart-line-fill" style="color: #16A34A;"></i> الناشرون الأكثر تكراراً
                 </div>
-                @if (topPublishers.Count == 0)
-                {
-                    <div style="text-align: center; color: #94A3B8; padding: 20px;">لا توجد بيانات</div>
-                }
-                else
-                {
-                    @foreach (var p in topPublishers)
-                    {
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #F1F5F9; font-size: 13px;">
-                            <span style="color: #475569; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 65%;">@p.Name</span>
-                            <span style="font-weight: 800; color: #1E293B; background: #F1F5F9; padding: 2px 10px; border-radius: 6px;">@p.Count</span>
-                        </div>
-                    }
-                }
+                <div style="position: relative; height: 250px; width: 100%;">
+                    <canvas id="publishersChart"></canvas>
+                </div>
             </div>
         </div>
 
-        <!-- ===== الصف الثالث: أحدث المجلات ===== -->
-        <div style="background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); overflow: hidden;">
-            <div style="padding: 24px; border-bottom: 1px solid #F1F5F9; display: flex; justify-content: space-between; align-items: center;">
-                <div style="font-size: 18px; font-weight: bold; color: #1E293B; display: flex; align-items: center; gap: 10px;">
-                    <i class="bi bi-journals" style="color: #6366F1;"></i> أحدث المجلات المضافة
+        <!-- ===== الصف الثالث: جدول أحدث المجلات ===== -->
+        <div style="background: white; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #E2E8F0; overflow: hidden;">
+            <div style="padding: 20px 25px; border-bottom: 1px solid #F1F5F9; display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-size: 16px; font-weight: 800; color: #1E293B; display: flex; align-items: center; gap: 8px;">
+                    <i class="bi bi-clock-history" style="color: #6366F1;"></i> أحدث الإضافات
                 </div>
-                <a href="/manage-journals" style="font-size: 14px; color: #6366F1; text-decoration: none; font-weight: 700; background: #EEF2FF; padding: 8px 16px; border-radius: 8px;">
-                    عرض الكل <i class="bi bi-arrow-left" style="font-size: 12px;"></i>
+                <a href="/manage-journals" style="font-size: 13px; color: #6366F1; text-decoration: none; font-weight: 700; background: #EEF2FF; padding: 6px 14px; border-radius: 8px; transition: 0.2s;">
+                    عرض الكل <i class="bi bi-arrow-left"></i>
                 </a>
             </div>
             <table style="width: 100%; border-collapse: collapse; text-align: right;">
                 <thead>
                     <tr style="background: #F8FAFC; border-bottom: 1px solid #E2E8F0;">
-                        <th style="padding: 15px; color: #475569; font-weight: 600;">اسم المجلة</th>
-                        <th style="padding: 15px; color: #475569; font-weight: 600;">الناشر</th>
-                        <th style="padding: 15px; color: #475569; font-weight: 600;">الدولة</th>
-                        <th style="padding: 15px; color: #475569; font-weight: 600;">الربع</th>
-                        <th style="padding: 15px; color: #475569; font-weight: 600;">معامل التأثير</th>
+                        <th style="padding: 15px 25px; color: #475569; font-weight: 700; font-size: 13px;">اسم المجلة</th>
+                        <th style="padding: 15px; color: #475569; font-weight: 700; font-size: 13px;">الناشر</th>
+                        <th style="padding: 15px; color: #475569; font-weight: 700; font-size: 13px;">الدولة</th>
+                        <th style="padding: 15px; color: #475569; font-weight: 700; font-size: 13px;">الربع</th>
+                        <th style="padding: 15px 25px; color: #475569; font-weight: 700; font-size: 13px;">معامل التأثير</th>
                     </tr>
                 </thead>
                 <tbody>
                     @if (recentJournals.Count == 0)
                     {
-                        <tr><td colspan="5" style="text-align: center; color: #94A3B8; padding: 40px; font-size: 15px;">لا توجد مجلات لعرضها حالياً</td></tr>
+                        <tr><td colspan="5" style="text-align: center; color: #94A3B8; padding: 40px;">لا توجد مجلات لعرضها حالياً</td></tr>
                     }
                     @foreach (var journal in recentJournals)
                     {
-                        <tr style="border-bottom: 1px solid #F1F5F9;">
-                            <td style="padding: 15px; font-weight: bold; color: #1E293B; font-size: 15px;">@journal.name</td>
-                            <td style="padding: 15px; color: #475569; font-size: 14px;">@journal.publisher</td>
-                            <td style="padding: 15px; color: #475569; font-size: 14px;">@journal.country</td>
-                            <td style="padding: 15px;"><span style="background: #EEF2FF; color: #6366F1; padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 12px;">@journal.quartile</span></td>
-                            <td style="padding: 15px; font-weight: 800; color: #0F172A; font-size: 16px;">@journal.impact_factor</td>
+                        <tr style="border-bottom: 1px solid #F1F5F9; transition: 0.2s;" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='white'">
+                            <td style="padding: 15px 25px; font-weight: 700; color: #1E293B;">@journal.name</td>
+                            <td style="padding: 15px; color: #64748B;">@journal.publisher</td>
+                            <td style="padding: 15px; color: #64748B;">@journal.country</td>
+                            <td style="padding: 15px;"><span style="background: #EEF2FF; color: #6366F1; padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 12px;">@journal.quartile</span></td>
+                            <td style="padding: 15px 25px; font-weight: 800; color: #0F172A;">@journal.impact_factor</td>
                         </tr>
                     }
                 </tbody>
@@ -217,11 +170,7 @@ else
     private List<PublisherStat> topPublishers = new();
     private string currentDate = "", currentTime = "";
 
-    // متغيرات المستخدم
-    private string currentUserName = "باحث"; // الافتراضي
-    private string currentUserRole = "Researcher";
-    private string currentUserInitial = "U";
-
+    private string currentUserName = "باحث";
     private Timer? _timer;
 
     private string supabaseUrl = "https://dayowfmmqtoyewjgnptf.supabase.co";
@@ -229,12 +178,8 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        // 1. جلب بيانات المستخدم من الـ LocalStorage
         await LoadUserInfo();
-
-        // 2. تحميل بيانات لوحة التحكم
         await LoadDataAsync();
-
         UpdateTime();
         _timer = new Timer(_ => InvokeAsync(() => { UpdateTime(); StateHasChanged(); }), null, 0, 1000);
     }
@@ -244,34 +189,9 @@ else
         try
         {
             var fullName = await JS.InvokeAsync<string>("localStorage.getItem", "fullName");
-            var username = await JS.InvokeAsync<string>("localStorage.getItem", "username");
-            var role = await JS.InvokeAsync<string>("localStorage.getItem", "userRole");
-
-            // نفضل الاسم الكامل، وإذا ما موجود نستخدم اسم المستخدم
-            if (!string.IsNullOrWhiteSpace(fullName))
-            {
-                currentUserName = fullName;
-            }
-            else if (!string.IsNullOrWhiteSpace(username))
-            {
-                currentUserName = username;
-            }
-
-            if (!string.IsNullOrWhiteSpace(role))
-            {
-                currentUserRole = role == "admin" ? "Admin" : "Researcher";
-            }
-
-            // استخراج أول حرف للأفاتار
-            if (!string.IsNullOrWhiteSpace(currentUserName))
-            {
-                currentUserInitial = currentUserName.Substring(0, 1).ToUpper();
-            }
+            if (!string.IsNullOrWhiteSpace(fullName)) currentUserName = fullName;
         }
-        catch
-        {
-            // في حال عدم وجود بيانات، نستخدم القيم الافتراضية
-        }
+        catch { }
     }
 
     private void UpdateTime()
@@ -281,16 +201,16 @@ else
         currentTime = now.ToString("hh:mm:ss tt");
     }
 
-    private double GetPercent(int count) => totalJournals > 0 ? Math.Round((double)count / totalJournals * 100, 1) : 0;
-
     private async Task LoadDataAsync()
     {
         isLoading = true;
         try
         {
+            // جلب الإحصائيات الأساسية
             totalJournals = await GetCountAsync($"{supabaseUrl}/rest/v1/journals?select=id");
             iraqiJournalsCount = await GetCountAsync($"{supabaseUrl}/rest/v1/journals?select=id&country=eq.Iraq");
 
+            // جلب توزيع الأرباع
             var docQ = await GetJsonAsync($"{supabaseUrl}/rest/v1/journals?select=quartile,count()&quartile=not.is.null");
             if (docQ != null)
             {
@@ -302,6 +222,7 @@ else
                 }
             }
 
+            // جلب المتوسط والأعلى
             var docAvg = await GetJsonAsync($"{supabaseUrl}/rest/v1/journals?select=impact_factor.avg()");
             if (docAvg != null && docAvg.RootElement.GetArrayLength() > 0)
             {
@@ -316,6 +237,7 @@ else
                 if (m.ValueKind != JsonValueKind.Null) maxImpactFactor = m.GetDouble();
             }
 
+            // جلب الناشرين
             topPublishers.Clear();
             var docPub = await GetJsonAsync($"{supabaseUrl}/rest/v1/journals?select=publisher,count()&publisher=not.is.null&order=count.desc&limit=5");
             if (docPub != null)
@@ -328,14 +250,39 @@ else
                 }
             }
 
+            // جلب أحدث المجلات
             var docRecent = await GetJsonAsync($"{supabaseUrl}/rest/v1/journals?select=*&limit=5&order=id.desc");
             if (docRecent != null)
             {
                 recentJournals = JsonSerializer.Deserialize<List<Journal>>(docRecent.RootElement.GetRawText(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
             }
+
+            // بعد جلب البيانات، نرسم الرسوم البيانية
+            await DrawCharts();
         }
         catch (Exception ex) { Console.WriteLine($"Error: {ex.Message}"); }
         finally { isLoading = false; }
+    }
+
+    private async Task DrawCharts()
+    {
+        try
+        {
+            // ننتظر قليلاً (500 ملي ثانية) لضمان أن المتصفح قد رسم عناصر <canvas> بالكامل
+            await Task.Delay(500);
+
+            // تحويل البيانات إلى مصفوفات
+            var quartileData = new[] { q1Count, q2Count, q3Count, q4Count };
+            var pubNames = topPublishers.Select(p => p.Name).ToArray();
+            var pubCounts = topPublishers.Select(p => p.Count).ToArray();
+
+            // استدعاء دالة الجافاسكربت
+            await JS.InvokeVoidAsync("renderCharts", quartileData, pubNames, pubCounts);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"خطأ في رسم المخططات: {ex.Message}");
+        }
     }
 
     private async Task<JsonDocument?> GetJsonAsync(string url)

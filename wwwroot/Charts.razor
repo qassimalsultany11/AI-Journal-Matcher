@@ -1,0 +1,55 @@
+﻿window.renderCharts = function (quartileData, pubNames, pubCounts) {
+// --- رسم توزيع الأرباع (Doughnut Chart) ---
+var ctx1 = document.getElementById('quartileChart');
+if (ctx1 && ctx1.chart) { ctx1.chart.destroy(); }
+if (ctx1) {
+ctx1.chart = new Chart(ctx1, {
+type: 'doughnut',
+data: {
+labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+datasets: [{
+data: quartileData,
+backgroundColor: ['#16A34A', '#3B82F6', '#F59E0B', '#EF4444'],
+borderWidth: 0,
+hoverOffset: 4
+}]
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+plugins: {
+legend: { position: 'bottom', labels: { font: { family: 'Segoe UI', size: 13, weight: 'bold' } } }
+},
+cutout: '70%'
+}
+});
+}
+
+// --- رسم الناشرين (Bar Chart) ---
+var ctx2 = document.getElementById('publishersChart');
+if (ctx2 && ctx2.chart) { ctx2.chart.destroy(); }
+if (ctx2) {
+ctx2.chart = new Chart(ctx2, {
+type: 'bar',
+data: {
+labels: pubNames,
+datasets: [{
+label: 'عدد المجلات',
+data: pubCounts,
+backgroundColor: '#6366F1',
+borderRadius: 6,
+barThickness: 25
+}]
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+plugins: { legend: { display: false } },
+scales: {
+y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { display: false } },
+x: { grid: { display: false }, ticks: { font: { family: 'Segoe UI', size: 11 } } }
+}
+}
+});
+}
+};
