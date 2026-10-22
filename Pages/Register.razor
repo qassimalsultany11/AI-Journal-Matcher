@@ -16,13 +16,13 @@
         align-items: center;
         min-height: 100vh;
         background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         padding: 20px;
     }
 
     .register-card {
         width: 100%;
-        max-width: 550px; /* أعرض قليلاً لأن فيه حقول كثيرة */
+        max-width: 900px; /* وسعناها عشان تصير بالعرض */
         background: #ffffff;
         border-radius: 16px;
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
@@ -44,48 +44,49 @@
 
     .register-header {
         background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #EC4899 100%);
-        padding: 30px 20px;
+        padding: 20px;
         text-align: center;
         color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
     }
 
     .register-header-icon {
-        width: 68px;
-        height: 68px;
+        width: 50px;
+        height: 50px;
         background: rgba(255, 255, 255, 0.2);
         border-radius: 50%;
         display: flex;
         justify-content: center;
         align-items: center;
-        margin: 0 auto 15px;
-        font-size: 30px;
+        font-size: 24px;
     }
 
-    .register-header h2 {
-        margin: 0 0 5px 0;
-        font-size: 22px;
+    .register-header-text h2 {
+        margin: 0;
+        font-size: 20px;
         font-weight: bold;
     }
 
-    .register-header p {
+    .register-header-text p {
         margin: 0;
         font-size: 12px;
         color: #E0E7FF;
     }
 
     .register-body {
-        padding: 30px;
+        padding: 25px 30px;
     }
 
-    /* تقسيم الحقول لعمودين في الشاشات الكبيرة */
     .form-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 15px;
+        grid-template-columns: 1fr 1fr; /* عمودين بالعرض */
+        gap: 15px 20px;
     }
 
     .form-group {
-        margin-bottom: 15px;
         position: relative;
     }
 
@@ -95,8 +96,8 @@
 
     .form-label {
         display: block;
-        font-size: 12px;
-        font-weight: 600;
+        font-size: 13px;
+        font-weight: 700;
         color: #334155;
         margin-bottom: 6px;
     }
@@ -110,7 +111,7 @@
     .form-control {
         width: 100%;
         height: 42px;
-        padding: 0 40px;
+        padding: 0 35px;
         font-size: 13px;
         color: #2C3E50;
         background: #F8FAFC;
@@ -127,13 +128,23 @@
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
         }
 
+        /* حالة الحقل الصحيح */
+        .form-control.is-valid {
+            border-color: #10B981 !important;
+            background-image: none;
+        }
+
     .input-icon {
         position: absolute;
-        left: 14px;
+        left: 12px;
         color: #94A3B8;
-        font-size: 14px;
+        font-size: 16px;
         pointer-events: none;
     }
+
+        .input-icon.is-valid-icon {
+            color: #10B981;
+        }
 
     .btn-toggle-pass {
         position: absolute;
@@ -142,7 +153,7 @@
         border: none;
         color: #94A3B8;
         cursor: pointer;
-        font-size: 14px;
+        font-size: 16px;
         padding: 5px;
     }
 
@@ -150,14 +161,67 @@
             color: #6366F1;
         }
 
+    /* تصميم اختيار الصلاحية */
+    .role-cards {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+
+    .role-card {
+        border: 2px solid #E2E8F0;
+        border-radius: 10px;
+        padding: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: center;
+        background: #F8FAFC;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+        .role-card:hover {
+            border-color: #CBD5E1;
+            background: #F1F5F9;
+        }
+
+        .role-card.active {
+            border-color: #6366F1;
+            background: #EEF2FF;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+        }
+
+        .role-card i {
+            font-size: 20px;
+            color: #64748B;
+        }
+
+        .role-card.active i {
+            color: #6366F1;
+        }
+
+    .role-card-title {
+        font-weight: 700;
+        color: #1E293B;
+        font-size: 13px;
+    }
+
+    .role-card-desc {
+        font-size: 10px;
+        color: #64748B;
+        margin-top: 2px;
+    }
+
     .btn-primary {
         width: 100%;
-        height: 46px;
+        height: 48px;
         background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
         color: white;
         border: none;
-        border-radius: 10px;
-        font-size: 14px;
+        border-radius: 8px;
+        font-size: 15px;
         font-weight: bold;
         cursor: pointer;
         display: flex;
@@ -165,11 +229,12 @@
         align-items: center;
         gap: 8px;
         transition: all 0.2s;
-        margin-top: 10px;
+        margin-top: 20px;
     }
 
         .btn-primary:hover {
             box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+            transform: translateY(-1px);
         }
 
         .btn-primary:disabled {
@@ -177,30 +242,27 @@
             cursor: not-allowed;
         }
 
-    .alert-error {
-        background: #FEF2F2;
-        color: #DC2626;
-        border: 1px solid #FECACA;
-        padding: 10px;
+    .alert-error, .alert-success {
+        padding: 10px 15px;
         border-radius: 8px;
-        font-size: 12px;
+        font-size: 13px;
         margin-bottom: 15px;
         display: flex;
         align-items: center;
         gap: 8px;
+        font-weight: 600;
+    }
+
+    .alert-error {
+        background: #FEF2F2;
+        color: #DC2626;
+        border: 1px solid #FECACA;
     }
 
     .alert-success {
         background: #DCFCE7;
         color: #166534;
         border: 1px solid #BBF7D0;
-        padding: 10px;
-        border-radius: 8px;
-        font-size: 12px;
-        margin-bottom: 15px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
     }
 
     .login-link-container {
@@ -208,6 +270,8 @@
         margin-top: 20px;
         font-size: 13px;
         color: #64748B;
+        border-top: 1px solid #E2E8F0;
+        padding-top: 15px;
     }
 
     .login-link {
@@ -220,8 +284,12 @@
             text-decoration: underline;
         }
 
-    @@media (max-width: 600px) {
+    @@media (max-width: 768px) {
         .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .role-cards {
             grid-template-columns: 1fr;
         }
     }
@@ -230,33 +298,48 @@
 <div class="register-page-wrapper">
     <div class="register-card">
         <div class="register-header">
-            <div class="register-header-icon">
-                <i class="bi bi-person-plus"></i>
+            <div class="register-header-icon"><i class="bi bi-person-plus"></i></div>
+            <div class="register-header-text">
+                <h2>إنشاء حساب جديد</h2>
+                <p>انضم إلى منصة AI Journal Matcher</p>
             </div>
-            <h2>إنشاء حساب جديد</h2>
-            <p>انضم إلى منصة AI Journal Matcher</p>
         </div>
 
         <div class="register-body">
             @if (!string.IsNullOrEmpty(errorMessage))
             {
-                <div class="alert-error">
-                    <i class="bi bi-exclamation-triangle-fill"></i>
-                    @errorMessage
-                </div>
+                <div class="alert-error"><i class="bi bi-exclamation-triangle-fill"></i> @errorMessage</div>
             }
 
             @if (showSuccess)
             {
-                <div class="alert-success">
-                    <i class="bi bi-check-circle-fill"></i>
-                    تم إنشاء الحساب بنجاح! جاري تحويلك لتسجيل الدخول...
-                </div>
+                <div class="alert-success"><i class="bi bi-check-circle-fill"></i> @successMessage</div>
             }
 
             <div class="form-grid">
-                <!-- الاسم الكامل -->
+                <!-- نوع الحساب (بعرض كامل) -->
                 <div class="form-group full-width">
+                    <label class="form-label">اختر نوع الحساب *</label>
+                    <div class="role-cards">
+                        <div class="role-card @(selectedRole == "researcher" ? "active" : "")" @onclick='() => selectedRole = "researcher"'>
+                            <i class="bi bi-person-badge"></i>
+                            <div>
+                                <div class="role-card-title">باحث</div>
+                                <div class="role-card-desc">تصفح النظام، ابحث عن مجلات، وقدم أبحاثك.</div>
+                            </div>
+                        </div>
+                        <div class="role-card @(selectedRole == "admin" ? "active" : "")" @onclick='() => selectedRole = "admin"'>
+                            <i class="bi bi-shield-lock"></i>
+                            <div>
+                                <div class="role-card-title">مدير نظام</div>
+                                <div class="role-card-desc">إدارة النظام، المجلات، والتحكم بالصلاحيات. (يتطلب موافقة)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- الاسم الكامل -->
+                <div class="form-group">
                     <label class="form-label">الاسم الكامل *</label>
                     <div class="input-wrapper">
                         <i class="bi bi-person input-icon"></i>
@@ -277,8 +360,56 @@
                 <div class="form-group">
                     <label class="form-label">البريد الإلكتروني *</label>
                     <div class="input-wrapper">
-                        <i class="bi bi-envelope input-icon"></i>
-                        <input type="email" class="form-control" @bind="email" placeholder="email@example.com" />
+                        <i class="bi @(IsValidEmail(email) ? "bi-envelope-check-fill is-valid-icon" : "bi-envelope") input-icon"></i>
+                        <input type="email" class="form-control @(IsValidEmail(email) ? "is-valid" : "")" @bind="email" @bind:event="oninput" placeholder="email@example.com" />
+                    </div>
+                </div>
+
+                <!-- رقم الواتساب / الهاتف -->
+                <div class="form-group">
+                    <label class="form-label">رقم الهاتف / الواتساب</label>
+                    <div class="input-wrapper">
+                        <i class="bi bi-whatsapp input-icon"></i>
+                        <input type="tel" class="form-control" value="@whatsapp" @oninput="OnPhoneInput" placeholder="+964 770 000 0000" />
+                    </div>
+                </div>
+
+                <!-- الجامعة (قائمة منسدلة قابلة للكتابة) -->
+                <div class="form-group">
+                    <label class="form-label">الجامعة / المؤسسة</label>
+                    <div class="input-wrapper">
+                        <i class="bi bi-building input-icon"></i>
+                        <input type="text" class="form-control" @bind="university" list="universities-list" placeholder="ابحث أو اكتب اسم الجامعة..." />
+                        <datalist id="universities-list">
+                            <option value="University of Baghdad"></option>
+                            <option value="University of Technology"></option>
+                            <option value="Al-Mustansiriyah University"></option>
+                            <option value="University of Kufa"></option>
+                            <option value="University of Basrah"></option>
+                            <option value="University of Mosul"></option>
+                            <option value="American University of Iraq"></option>
+                        </datalist>
+                    </div>
+                </div>
+
+                <!-- التخصص (قائمة منسدلة قابلة للكتابة) -->
+                <div class="form-group">
+                    <label class="form-label">التخصص</label>
+                    <div class="input-wrapper">
+                        <i class="bi bi-book input-icon"></i>
+                        <input type="text" class="form-control" @bind="specialization" list="specializations-list" placeholder="ابحث أو اكتب التخصص..." />
+                        <datalist id="specializations-list">
+                            <option value="Computer Science"></option>
+                            <option value="Information Technology"></option>
+                            <option value="Software Engineering"></option>
+                            <option value="Artificial Intelligence"></option>
+                            <option value="Mathematics"></option>
+                            <option value="Physics"></option>
+                            <option value="Chemistry"></option>
+                            <option value="Biology"></option>
+                            <option value="Medicine"></option>
+                            <option value="Engineering"></option>
+                        </datalist>
                     </div>
                 </div>
 
@@ -287,7 +418,7 @@
                     <label class="form-label">كلمة المرور *</label>
                     <div class="input-wrapper">
                         <i class="bi bi-lock input-icon"></i>
-                        <input type="@(showPassword ? "text" : "password")" class="form-control" @bind="password" placeholder="6 أحرف على الأقل" />
+                        <input type="@(showPassword ? "text" : "password")" class="form-control" @bind="password" @bind:event="oninput" placeholder="6 أحرف على الأقل" />
                         <button type="button" class="btn-toggle-pass" @onclick="() => showPassword = !showPassword">
                             <i class="bi @(showPassword ? "bi-eye-slash" : "bi-eye")"></i>
                         </button>
@@ -298,49 +429,21 @@
                 <div class="form-group">
                     <label class="form-label">تأكيد كلمة المرور *</label>
                     <div class="input-wrapper">
-                        <i class="bi bi-shield-lock input-icon"></i>
-                        <input type="password" class="form-control" @bind="confirmPassword" placeholder="أعد كتابة كلمة المرور" />
+                        <i class="bi @(IsPasswordMatch() && !string.IsNullOrEmpty(password) ? "bi-shield-check is-valid-icon" : "bi-shield-lock") input-icon"></i>
+                        <input type="password" class="form-control @(IsPasswordMatch() && !string.IsNullOrEmpty(password) ? "is-valid" : "")" @bind="confirmPassword" @bind:event="oninput" placeholder="أعد كتابة كلمة المرور" />
                     </div>
                 </div>
 
-                <!-- الجامعة (اختياري) -->
-                <div class="form-group">
-                    <label class="form-label">الجامعة / المؤسسة</label>
-                    <div class="input-wrapper">
-                        <i class="bi bi-building input-icon"></i>
-                        <input type="text" class="form-control" @bind="university" placeholder="مثال: University of Baghdad" />
-                    </div>
-                </div>
-
-                <!-- التخصص (اختياري) -->
-                <div class="form-group">
-                    <label class="form-label">التخصص</label>
-                    <div class="input-wrapper">
-                        <i class="bi bi-book input-icon"></i>
-                        <input type="text" class="form-control" @bind="specialization" placeholder="مثال: Computer Science" />
-                    </div>
-                </div>
-
-                <!-- رقم الواتساب (اختياري) -->
-                <div class="form-group">
-                    <label class="form-label">رقم الواتساب</label>
-                    <div class="input-wrapper">
-                        <i class="bi bi-whatsapp input-icon"></i>
-                        <input type="text" class="form-control" @bind="whatsapp" placeholder="+964 770 000 0000" />
-                    </div>
-                </div>
-
-                <!-- ORCID (اختياري) -->
+                <!-- ORCID ID -->
                 <div class="form-group">
                     <label class="form-label">ORCID ID</label>
                     <div class="input-wrapper">
                         <i class="bi bi-person-vcard input-icon"></i>
-                        <input type="text" class="form-control" @bind="orcid" placeholder="0000-0000-0000-0000" />
+                        <input type="text" class="form-control" value="@orcid" @oninput="OnOrcidInput" maxlength="19" placeholder="0000-0000-0000-0000" />
                     </div>
                 </div>
             </div>
 
-            <!-- زر التسجيل -->
             <button class="btn-primary" @onclick="HandleRegister" disabled="@isLoading">
                 @if (isLoading)
                 {
@@ -362,7 +465,6 @@
 </div>
 
 @code {
-    // المتغيرات
     private string fullName = "";
     private string username = "";
     private string email = "";
@@ -374,23 +476,80 @@
     private string orcid = "";
 
     private string errorMessage = "";
+    private string successMessage = "";
     private bool isLoading = false;
     private bool showPassword = false;
     private bool showSuccess = false;
+    private string selectedRole = "researcher";
 
     private string supabaseUrl = "https://dayowfmmqtoyewjgnptf.supabase.co";
     private string supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRheW93Zm1tcXRveWV3amducHRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwMTI4MTcsImV4cCI6MjEwNjU4ODgxN30.IcR-HI9AZOdsWyg93PURcm3riWzqzd7r0v69P0pzNTc";
+
+    // دالة التحقق من تطابق كلمة المرور
+    private bool IsPasswordMatch()
+    {
+        return password == confirmPassword;
+    }
+
+    // دالة التحقق من صحة البريد الإلكتروني
+    private bool IsValidEmail(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email)) return false;
+        try
+        {
+            var addr = new System.Net.Mail.MailAddress(email);
+            return addr.Address == email;
+        }
+        catch { return false; }
+    }
+
+    // دالة معالجة إدخال الهاتف (أرقام فقط)
+    private void OnPhoneInput(ChangeEventArgs e)
+    {
+        var input = e.Value?.ToString() ?? "";
+        // إبقاء الأرقام وعلامة + فقط
+        var filtered = new string(input.Where(c => char.IsDigit(c) || c == '+').ToArray());
+        whatsapp = filtered;
+    }
+
+    // دالة معالجة إدخال ORCID (إضافة شرطات تلقائية)
+    private void OnOrcidInput(ChangeEventArgs e)
+    {
+        var input = e.Value?.ToString() ?? "";
+        // إزالة كل شيء ما عدا الأرقام
+        var digitsOnly = new string(input.Where(char.IsDigit).ToArray());
+
+        // إضافة الشرطات كل 4 أرقام
+        if (digitsOnly.Length > 4)
+        {
+            var parts = new List<string>();
+            for (int i = 0; i < digitsOnly.Length; i += 4)
+            {
+                parts.Add(digitsOnly.Substring(i, Math.Min(4, digitsOnly.Length - i)));
+            }
+            orcid = string.Join("-", parts);
+        }
+        else
+        {
+            orcid = digitsOnly;
+        }
+    }
 
     private async Task HandleRegister()
     {
         errorMessage = "";
         showSuccess = false;
 
-        // 1. التحقق من الحقول الإجبارية
         if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(username) ||
             string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
         {
             errorMessage = "الرجاء ملء جميع الحقول الإجبارية (*).";
+            return;
+        }
+
+        if (!IsValidEmail(email))
+        {
+            errorMessage = "الرجاء إدخال بريد إلكتروني صحيح.";
             return;
         }
 
@@ -410,7 +569,7 @@
 
         try
         {
-            // 2. فحص ما إذا كان البريد الإلكتروني أو اسم المستخدم موجود مسبقاً
+            // 1. فحص التكرار
             var checkRequest = new HttpRequestMessage(HttpMethod.Get, $"{supabaseUrl}/rest/v1/users?or=(email.eq.{Uri.EscapeDataString(email)},username.eq.{Uri.EscapeDataString(username)})&select=email,username");
             checkRequest.Headers.Add("apikey", supabaseKey);
             checkRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
@@ -427,20 +586,25 @@
                 }
             }
 
-            // 3. تشفير كلمة المرور (نستخدم SHA256 كما في صفحة تسجيل الدخول)
+            // 2. تشفير كلمة المرور
             string hashedPassword = HashPassword(password);
 
-            // 4. تجهيز البيانات للإرسال
+            // 3. تحديد حالة الموافقة (الأدمن يحتاج موافقة، الباحث تلقائي)
+            bool isApproved = selectedRole == "researcher";
+
+            // 4. تجهيز البيانات
             var newUser = new
             {
                 username = username.Trim(),
                 email = email.Trim().ToLower(),
                 password_hash = hashedPassword,
                 full_name = fullName.Trim(),
-                role = "researcher", // الصلاحية الافتراضية
+                role = selectedRole,
+                is_approved = isApproved,
                 university = string.IsNullOrWhiteSpace(university) ? null : university.Trim(),
                 specialization = string.IsNullOrWhiteSpace(specialization) ? null : specialization.Trim(),
                 whatsapp = string.IsNullOrWhiteSpace(whatsapp) ? null : whatsapp.Trim(),
+                phone = string.IsNullOrWhiteSpace(whatsapp) ? null : whatsapp.Trim(), // خزناها بالاثنين تحسباً
                 orcid = string.IsNullOrWhiteSpace(orcid) ? null : orcid.Trim(),
                 profile_completed = false
             };
@@ -460,8 +624,19 @@
             if (response.IsSuccessStatusCode)
             {
                 showSuccess = true;
-                await Task.Delay(2000); // انتظار ثانيتين
-                Nav.NavigateTo("/login"); // التحويل لصفحة الدخول
+
+                if (selectedRole == "admin")
+                {
+                    successMessage = "تم إرسال طلبك بنجاح! يرجى انتظار موافقة مدير النظام لتتمكن من الدخول.";
+                    await Task.Delay(4000);
+                }
+                else
+                {
+                    successMessage = "تم إنشاء الحساب بنجاح! جاري تحويلك لتسجيل الدخول...";
+                    await Task.Delay(2000);
+                }
+
+                Nav.NavigateTo("/login");
             }
             else
             {
@@ -479,7 +654,6 @@
         }
     }
 
-    // دالة التشفير (يجب أن تتطابق مع دالة التحقق في صفحة تسجيل الدخول)
     private string HashPassword(string password)
     {
         using (var sha256 = SHA256.Create())

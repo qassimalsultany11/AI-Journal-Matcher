@@ -9,37 +9,71 @@
 
 <style>
     .edit-profile-container {
-        max-width: 900px;
-        margin: 0 auto;
         padding: 25px;
+        background: #F8FAFC;
+        min-height: 100vh;
+        direction: rtl;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        color: #1E293B;
     }
 
-    .page-header {
-        margin-bottom: 30px;
-        background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
-        padding: 20px;
+    /* الهيدر */
+    .header-card {
+        background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
         border-radius: 16px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        padding: 25px 30px;
+        color: white;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        margin-bottom: 25px;
+        box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
     }
 
-        .page-header h2 {
-            font-size: 26px;
-            font-weight: 800;
-            margin: 0;
-            background: linear-gradient(90deg, #4F46E5, #9333EA);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+    .header-info h1 {
+        margin: 0;
+        font-size: 26px;
+        font-weight: 800;
+    }
 
+    .header-info p {
+        margin: 5px 0 0 0;
+        font-size: 14px;
+        opacity: 0.9;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .header-user {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 8px 15px;
+        border-radius: 8px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-back {
+        background: white;
+        color: #6366F1;
+        padding: 10px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* الكارت */
     .form-card {
         background: white;
         border-radius: 16px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
         padding: 30px;
         border: 1px solid #E2E8F0;
     }
@@ -58,17 +92,17 @@
 
     .form-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         gap: 20px;
+    }
+
+    .full-width {
+        grid-column: 1 / -1;
     }
 
     .form-group {
         display: flex;
         flex-direction: column;
-    }
-
-    .full-width {
-        grid-column: 1 / -1;
     }
 
     .form-label {
@@ -102,7 +136,7 @@
 
     textarea.form-control {
         resize: vertical;
-        min-height: 100px;
+        min-height: 80px;
     }
 
     .btn-generate-bio {
@@ -133,16 +167,16 @@
     }
 
     .btn {
-        padding: 12px 24px;
+        padding: 12px 28px;
         border-radius: 10px;
-        font-size: 14px;
+        font-size: 15px;
         font-weight: bold;
         cursor: pointer;
         display: flex;
         align-items: center;
         gap: 8px;
         border: none;
-        transition: all 0.2s;
+        transition: all 0.3s ease;
     }
 
     .btn-cancel {
@@ -193,160 +227,144 @@
         color: #166534;
         border: 1px solid #BBF7D0;
     }
-
-    @@media (max-width: 768px) {
-        .form-grid {
-            grid-template-columns: 1fr;
-        }
-    }
 </style>
 
 <div class="edit-profile-container">
-    <div class="page-header">
-        <div>
-            <h2>✏️ تعديل الملف الشخصي</h2>
-            <p style="color: #64748B; margin: 5px 0 0 0; font-size: 14px;">قم بتحديث بياناتك الأكاديمية والشخصية هنا</p>
+    <!-- الهيدر -->
+    <div class="header-card">
+        <div class="header-info">
+            <h1>✏️ تعديل الملف الشخصي</h1>
+            <p>قم بتحديث بياناتك الأكاديمية والشخصية هنا</p>
         </div>
-        <a href="/manage-researchers" class="btn btn-cancel" style="text-decoration: none;">
-            <i class="bi bi-arrow-right"></i> العودة للقائمة
-        </a>
+        <div class="header-actions">
+            <a href="/manage-researchers" class="btn-back"><i class="bi bi-arrow-right"></i> العودة</a>
+            <div class="header-user"><i class="bi bi-person-circle"></i> @currentUserName</div>
+        </div>
     </div>
 
     @if (!string.IsNullOrEmpty(errorMessage))
     {
-        <div class="alert alert-error">
-            <i class="bi bi-exclamation-triangle-fill"></i> @errorMessage
-        </div>
+        <div class="alert alert-error"><i class="bi bi-exclamation-triangle-fill"></i> @errorMessage</div>
     }
-
     @if (showSuccess)
     {
-        <div class="alert alert-success">
-            <i class="bi bi-check-circle-fill"></i> تم حفظ التعديلات بنجاح! جاري تحويلك...
-        </div>
+        <div class="alert alert-success"><i class="bi bi-check-circle-fill"></i> تم حفظ التعديلات بنجاح! جاري التحويل...</div>
     }
 
     @if (isLoading)
     {
         <div style="text-align: center; padding: 50px;">
-            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
             <p style="margin-top: 15px; color: #64748B;">جاري تحميل البيانات...</p>
         </div>
     }
     else
     {
         <div class="form-card">
-            <!-- القسم الأول: المعلومات الأساسية -->
-            <div class="section-title">
-                <i class="bi bi-person-badge"></i> المعلومات الأساسية
-            </div>
-
+            <!-- 1. المعلومات الأساسية -->
+            <div class="section-title"><i class="bi bi-person-badge"></i> المعلومات الأساسية</div>
             <div class="form-grid">
                 <div class="form-group">
                     <label class="form-label"><span class="required">*</span> الاسم الكامل</label>
                     <input type="text" class="form-control" @bind="user.full_name" />
                 </div>
-
                 <div class="form-group">
                     <label class="form-label"><span class="required">*</span> اسم المستخدم</label>
                     <input type="text" class="form-control" @bind="user.username" />
                 </div>
-
                 <div class="form-group full-width">
                     <label class="form-label"><span class="required">*</span> البريد الإلكتروني</label>
                     <input type="email" class="form-control" @bind="user.email" />
                 </div>
             </div>
 
-            <!-- القسم الثاني: المعلومات الأكاديمية -->
-            <div class="section-title" style="margin-top: 30px;">
-                <i class="bi bi-mortarboard"></i> المعلومات الأكاديمية
-            </div>
-
+            <!-- 2. المعلومات الأكاديمية -->
+            <div class="section-title" style="margin-top: 30px;"><i class="bi bi-mortarboard"></i> المعلومات الأكاديمية</div>
             <div class="form-grid">
                 <div class="form-group">
-                    <label class="form-label">الجامعة / المؤسسة</label>
-                    <input type="text" class="form-control" @bind="user.university" placeholder="مثال: University of Baghdad" />
+                    <label class="form-label">الجامعة</label>
+                    <input type="text" class="form-control" @bind="user.university" list="unis-list" placeholder="ابحث أو اكتب..." />
+                    <datalist id="unis-list">
+                        <option value="University of Baghdad"></option>
+                        <option value="University of Technology"></option>
+                        <option value="Al-Mustansiriyah University"></option>
+                        <option value="University of Kufa"></option>
+                        <option value="University of Basrah"></option>
+                        <option value="University of Mosul"></option>
+                    </datalist>
                 </div>
-
                 <div class="form-group">
                     <label class="form-label">التخصص</label>
-                    <input type="text" class="form-control" @bind="user.specialization" placeholder="مثال: Computer Science" />
+                    <input type="text" class="form-control" @bind="user.specialization" list="specs-list" placeholder="ابحث أو اكتب..." />
+                    <datalist id="specs-list">
+                        <option value="Computer Science"></option>
+                        <option value="Information Technology"></option>
+                        <option value="Software Engineering"></option>
+                        <option value="Artificial Intelligence"></option>
+                        <option value="Mathematics"></option>
+                        <option value="Physics"></option>
+                        <option value="Chemistry"></option>
+                        <option value="Biology"></option>
+                        <option value="Medicine"></option>
+                        <option value="Engineering"></option>
+                    </datalist>
                 </div>
             </div>
 
-            <!-- القسم الثالث: معلومات التواصل -->
-            <div class="section-title" style="margin-top: 30px;">
-                <i class="bi bi-telephone"></i> معلومات التواصل
-            </div>
-
+            <!-- 3. معلومات التواصل -->
+            <div class="section-title" style="margin-top: 30px;"><i class="bi bi-telephone"></i> معلومات التواصل</div>
             <div class="form-grid">
                 <div class="form-group">
                     <label class="form-label">رقم الهاتف</label>
-                    <input type="text" class="form-control" @bind="user.phone" placeholder="+964..." />
+                    <input type="tel" class="form-control" @bind="user.phone" @oninput="OnPhoneInput" placeholder="+964..." />
                 </div>
-
                 <div class="form-group">
                     <label class="form-label">رقم الواتساب</label>
-                    <input type="text" class="form-control" @bind="user.whatsapp" placeholder="+964..." />
+                    <input type="tel" class="form-control" @bind="user.whatsapp" @oninput="OnWhatsAppInput" placeholder="+964..." />
                 </div>
             </div>
 
-            <!-- القسم الرابع: الروابط الأكاديمية -->
-            <div class="section-title" style="margin-top: 30px;">
-                <i class="bi bi-link-45deg"></i> الروابط الأكاديمية
-            </div>
-
+            <!-- 4. الروابط الأكاديمية -->
+            <div class="section-title" style="margin-top: 30px;"><i class="bi bi-link-45deg"></i> الروابط الأكاديمية</div>
             <div class="form-grid">
                 <div class="form-group">
                     <label class="form-label">ORCID ID</label>
                     <input type="text" class="form-control" @bind="user.orcid" placeholder="0000-0000-0000-0000" />
                 </div>
-
                 <div class="form-group">
                     <label class="form-label">Google Scholar</label>
-                    <input type="text" class="form-control" @bind="user.google_scholar" placeholder="رابط حسابك" />
+                    <input type="url" class="form-control" @bind="user.google_scholar" placeholder="https://scholar.google.com/..." />
                 </div>
-
                 <div class="form-group">
                     <label class="form-label">ResearchGate</label>
-                    <input type="text" class="form-control" @bind="user.researchgate" placeholder="رابط حسابك" />
+                    <input type="url" class="form-control" @bind="user.researchgate" placeholder="https://www.researchgate.net/..." />
                 </div>
-
                 <div class="form-group">
                     <label class="form-label">LinkedIn</label>
-                    <input type="text" class="form-control" @bind="user.linkedin" placeholder="رابط حسابك" />
+                    <input type="url" class="form-control" @bind="user.linkedin" placeholder="https://www.linkedin.com/in/..." />
                 </div>
             </div>
 
-            <!-- القسم الخامس: النبذة الشخصية -->
-            <div class="section-title" style="margin-top: 30px;">
-                <i class="bi bi-file-text"></i> النبذة الشخصية (Bio)
-            </div>
-
+            <!-- 5. النبذة -->
+            <div class="section-title" style="margin-top: 30px;"><i class="bi bi-file-text"></i> النبذة الشخصية</div>
             <div class="form-group full-width">
                 <label class="form-label">نبذة مختصرة</label>
                 <textarea class="form-control" @bind="user.bio" placeholder="اكتب نبذة عنك..."></textarea>
-                <button class="btn-generate-bio" @onclick="GenerateBio">
-                    <i class="bi bi-magic"></i> توليد نبذة بالذكاء الاصطناعي
-                </button>
+                <button class="btn-generate-bio" @onclick="GenerateBio"><i class="bi bi-magic"></i> توليد نبذة تلقائية</button>
             </div>
 
             <!-- أزرار الإجراءات -->
             <div class="form-actions">
-                <button class="btn btn-cancel" @onclick='() => Nav.NavigateTo("/manage-researchers")'>
-                    <i class="bi bi-x-lg"></i> إلغاء
-                </button>
+                <button class="btn btn-cancel" @onclick='() => Nav.NavigateTo("/manage-researchers")'><i class="bi bi-x-lg"></i> إلغاء</button>
                 <button class="btn btn-save" @onclick="SaveProfile" disabled="@isSaving">
                     @if (isSaving)
                     {
-                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                        <span>جاري الحفظ...</span>
+                        <span class="spinner-border spinner-border-sm"></span> <span>جاري الحفظ...</span>
                     }
                     else
                     {
-                        <i class="bi bi-check2-circle"></i>
-                        <span>حفظ التعديلات</span>
+
+                        <i class="bi bi-check2-circle"></i> <span>حفظ التعديلات</span>
                     }
                 </button>
             </div>
@@ -355,14 +373,13 @@
 </div>
 
 @code {
-    [Parameter]
-    [SupplyParameterFromQuery]
-    public long? id { get; set; }
+    [Parameter][SupplyParameterFromQuery] public long? id { get; set; }
 
     private bool isLoading = true;
     private bool isSaving = false;
     private bool showSuccess = false;
     private string errorMessage = "";
+    private string currentUserName = "المستخدم";
 
     private UserProfile user = new();
 
@@ -371,14 +388,16 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (!id.HasValue)
+        try
         {
-            errorMessage = "معرف المستخدم غير موجود في الرابط.";
-            isLoading = false;
-            return;
+            var name = await JS.InvokeAsync<string>("localStorage.getItem", "fullName");
+            if (!string.IsNullOrEmpty(name)) currentUserName = name;
         }
+        catch { }
 
-        // التحقق من الصلاحية (هل هذا المستخدم هو نفسه المسجل دخوله؟)
+        if (!id.HasValue) { errorMessage = "معرف المستخدم غير موجود."; isLoading = false; return; }
+
+        // التحقق من الصلاحية
         var currentUserId = await JS.InvokeAsync<string>("localStorage.getItem", "userId");
         if (currentUserId != id.Value.ToString())
         {
@@ -403,43 +422,36 @@
             {
                 var json = await response.Content.ReadAsStringAsync();
                 var users = JsonSerializer.Deserialize<List<UserProfile>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                if (users != null && users.Count > 0)
-                {
-                    user = users[0];
-                }
-                else
-                {
-                    errorMessage = "لم يتم العثور على بيانات المستخدم.";
-                }
+                if (users != null && users.Count > 0) user = users[0];
+                else errorMessage = "لم يتم العثور على البيانات.";
             }
-            else
-            {
-                errorMessage = "حدث خطأ أثناء تحميل البيانات.";
-            }
+            else errorMessage = "حدث خطأ أثناء تحميل البيانات.";
         }
-        catch (Exception ex)
-        {
-            errorMessage = $"خطأ: {ex.Message}";
-        }
-        finally
-        {
-            isLoading = false;
-        }
+        catch (Exception ex) { errorMessage = $"خطأ: {ex.Message}"; }
+        finally { isLoading = false; }
+    }
+
+    // تقييد حقول الهاتف لتقبل أرقام فقط
+    private void OnPhoneInput(ChangeEventArgs e)
+    {
+        var input = e.Value?.ToString() ?? "";
+        user.phone = new string(input.Where(c => char.IsDigit(c) || c == '+').ToArray());
+    }
+    private void OnWhatsAppInput(ChangeEventArgs e)
+    {
+        var input = e.Value?.ToString() ?? "";
+        user.whatsapp = new string(input.Where(c => char.IsDigit(c) || c == '+').ToArray());
     }
 
     private void GenerateBio()
     {
         if (string.IsNullOrWhiteSpace(user.specialization))
         {
-            errorMessage = "الرجاء إدخال التخصص أولاً لتوليد نبذة دقيقة.";
+            errorMessage = "الرجاء إدخال التخصص أولاً.";
             return;
         }
-
         string uni = string.IsNullOrWhiteSpace(user.university) ? "الجامعة" : user.university;
-
-        user.bio = $"باحث في مجال {user.specialization}، يعمل حالياً في {uni}. " +
-                           $"يهتم بتطوير البحث العلمي في مجالات {user.specialization} وتطبيقاتها العملية. " +
-                           $"يسعى إلى المساهمة في إنتاج معرفة علمية رصينة تخدم المجتمع الأكاديمي.";
+        user.bio = $"باحث في مجال {user.specialization}، يعمل حالياً في {uni}. يهتم بتطوير البحث العلمي في مجالات {user.specialization} وتطبيقاتها العملية. يسعى إلى المساهمة في إنتاج معرفة علمية رصينة تخدم المجتمع الأكاديمي.";
     }
 
     private async Task SaveProfile()
@@ -447,16 +459,13 @@
         errorMessage = "";
         showSuccess = false;
 
-        if (string.IsNullOrWhiteSpace(user.full_name) ||
-            string.IsNullOrWhiteSpace(user.username) ||
-            string.IsNullOrWhiteSpace(user.email))
+        if (string.IsNullOrWhiteSpace(user.full_name) || string.IsNullOrWhiteSpace(user.username) || string.IsNullOrWhiteSpace(user.email))
         {
             errorMessage = "الاسم الكامل واسم المستخدم والبريد الإلكتروني مطلوبة.";
             return;
         }
 
         isSaving = true;
-
         try
         {
             var payload = new
@@ -488,9 +497,7 @@
 
             if (response.IsSuccessStatusCode)
             {
-                // تحديث الاسم في الـ LocalStorage لكي يظهر في القائمة الجانبية
                 await JS.InvokeVoidAsync("localStorage.setItem", "fullName", user.full_name);
-
                 showSuccess = true;
                 await Task.Delay(1500);
                 Nav.NavigateTo("/manage-researchers");
@@ -501,14 +508,8 @@
                 errorMessage = $"فشل الحفظ: {err}";
             }
         }
-        catch (Exception ex)
-        {
-            errorMessage = $"خطأ: {ex.Message}";
-        }
-        finally
-        {
-            isSaving = false;
-        }
+        catch (Exception ex) { errorMessage = $"خطأ: {ex.Message}"; }
+        finally { isSaving = false; }
     }
 
     private static string? NullIfEmpty(string? s) => string.IsNullOrWhiteSpace(s) ? null : s.Trim();

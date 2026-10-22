@@ -1,60 +1,64 @@
 ﻿@page "/weather"
 @using System.Net.Http.Json
+@inject HttpClient Http
 
 <PageTitle>الطقس</PageTitle>
 
-<div class="container mt-4">
-    <div class="text-center mb-5">
+<div class="container mt-4" dir="rtl">
+    <div class="text-center mb-4">
         <h1 class="display-5 fw-bold text-primary">🌤️ حالة الطقس</h1>
-        <p class="lead text-muted">توقعات الطقس لمدة 5 أيام</p>
+        <p class="lead text-muted">توقعات الطقس لمدة 5 أيام لمحافظات العراق</p>
     </div>
 
-    @if (forecasts == null)
-    {
-        <div class="d-flex justify-content-center">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">جاري التحميل...</span>
+    <!-- قائمة اختيار المحافظة -->
+    <div class="row justify-content-center mb-4">
+        <div class="col-md-6 col-lg-5">
+            <div class="input-group shadow-sm">
+                <span class="input-group-text bg-primary text-white fw-bold">📍 الموقع</span>
+                <select class="form-select form-select-lg" @bind="selectedCityKey" @bind:after="LoadWeatherAsync">
+                    <option value="">-- اضغط هنا لاختيار المحافظة --</option>
+                    @foreach (var city in iraqiCities)
+                    {
+                        <option value="@city.Key">@city.Name</option>
+                    }
+                </select>
             </div>
         </div>
-    }
-    else
+    </div>
+
+    <!-- حالة التحميل -->
+    @if (isLoading)
     {
+        <div class="d-flex flex-column justify-content-center align-items-center my-5">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
+            <p class="mt-3 text-muted">جاري جلب البيانات من الأقمار الصناعية...</p>
+        </div>
+    }
+    else if (forecasts != null && forecasts.Any())
+    {
+        <!-- عرض البطاقات -->
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-5 g-4">
-            @foreach (var forecast in forecasts)
+            @foreach (var day in forecasts)
             {
                 <div class="col">
                     <div class="card h-100 shadow-sm border-0 weather-card">
-                        <div class="card-body text-center">
-                            <!-- أيقونة الطقس (تعتمد على الحالة) -->
+                        <div class="card-body text-center p-4">
                             <div class="weather-icon mb-3">
-                                @if (forecast.Summary.Contains("Freezing") || forecast.Summary.Contains("Bracing"))
-                                {
-                                    <span style="font-size: 3rem;">❄️</span>
-                                }
-                                else if (forecast.Summary.Contains("Chilly") || forecast.Summary.Contains("Cool"))
-                                {
-                                    <span style="font-size: 3rem;">🌥️</span>
-                                }
-                                else if (forecast.Summary.Contains("Balmy") || forecast.Summary.Contains("Warm"))
-                                {
-                                    <span style="font-size: 3rem;">☀️</span>
-                                }
-                                else
-                                {
-                                    <span style="font-size: 3rem;">🌡️</span>
-                                }
+                                <span style="font-size: 3rem;">@GetWeatherIcon(day.WeatherCode)</span>
                             </div>
-
-                            <h5 class="card-title fw-bold text-dark">@forecast.Date.ToShortDateString()</h5>
-                            <h6 class="card-subtitle mb-3 text-muted">@forecast.Summary</h6>
+                            <h5 class="card-title fw-bold text-dark mb-1">@day.Date.ToString("dddd", new System.Globalization.CultureInfo("ar-EG"))</h5>
+                            <h6 class="card-subtitle mb-3 text-muted" style="font-size: 0.9rem;">@day.Date.ToString("dd MMMM", new System.Globalization.CultureInfo("ar-EG"))</h6>
+                            <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">@GetWeatherDescription(day.WeatherCode)</span>
 
                             <div class="d-flex justify-content-center align-items-center gap-3 mt-4">
-                                <div class="temp-box">
-                                    <span class="fw-bold fs-4 text-primary">@forecast.TemperatureC°C</span>
+                                <div class="text-center">
+                                    <span class="fw-bold fs-4 text-danger">@day.TempMax°</span>
+                                    <small class="text-muted d-block fw-bold">العظمى</small>
                                 </div>
-                                <div class="vr"></div>
-                                <div class="temp-box">
-                                    <span class="fw-bold fs-5 text-secondary">@forecast.TemperatureF°F</span>
+                                <div class="vr" style="height: 40px; opacity: 0.2;"></div>
+                                <div class="text-center">
+                                    <span class="fw-bold fs-5 text-primary">@day.TempMin°</span>
+                                    <small class="text-muted d-block fw-bold">الصغرى</small>
                                 </div>
                             </div>
                         </div>
@@ -63,19 +67,24 @@
             }
         </div>
     }
+    else if (!string.IsNullOrEmpty(selectedCityKey) && !isLoading)
+    {
+        <div class="alert alert-warning text-center shadow-sm rounded-3">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> تعذر جلب البيانات لهذا الموقع. يرجى المحاولة مرة أخرى.
+        </div>
+    }
 </div>
 
-<!-- تنسيقات CSS المخصصة -->
 <style>
     .weather-card {
         transition: transform 0.3s ease, box-shadow 0.3s ease;
-        border-radius: 15px;
+        border-radius: 16px;
         background: linear-gradient(145deg, #ffffff, #f0f4f8);
     }
 
         .weather-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+            transform: translateY(-8px);
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.08) !important;
         }
 
     .weather-icon {
@@ -87,31 +96,148 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+        box-shadow: inset 0 3px 6px rgba(0,0,0,0.05);
+    }
+
+    .form-select-lg {
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        border-color: #0d6efd;
     }
 </style>
 
 @code {
-    private WeatherForecast[]? forecasts;
-
-    protected override async Task OnInitializedAsync()
+    // تم استخدام List بدلاً من Dictionary لضمان ظهور العناصر بشكل صحيح
+    private List<CityModel> iraqiCities = new()
     {
-        // محاكاة جلب البيانات (يمكنك إبقاء الكود الأصلي الخاص بك هنا)
-        var startDate = DateOnly.FromDateTime(DateTime.Now);
-        var summaries = new[] { "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching" };
-        forecasts = Enumerable.Range(1, 5).Select(index => new WeatherForecast
+        new CityModel { Key = "baghdad", Name = "بغداد", Lat = 33.3152, Lon = 44.3661 },
+        new CityModel { Key = "basra", Name = "البصرة", Lat = 30.5085, Lon = 47.7804 },
+        new CityModel { Key = "mosul", Name = "نينوى (الموصل)", Lat = 36.3350, Lon = 43.1189 },
+        new CityModel { Key = "erbil", Name = "أربيل", Lat = 36.1911, Lon = 44.0092 },
+        new CityModel { Key = "najaf", Name = "النجف", Lat = 32.0000, Lon = 44.3333 },
+        new CityModel { Key = "karbala", Name = "كربلاء", Lat = 32.6167, Lon = 44.0333 },
+        new CityModel { Key = "kirkuk", Name = "كركوك", Lat = 35.4681, Lon = 44.3922 },
+        new CityModel { Key = "sulaymaniyah", Name = "السليمانية", Lat = 35.5613, Lon = 45.4300 },
+        new CityModel { Key = "dohuk", Name = "دهوك", Lat = 36.8667, Lon = 42.9500 },
+        new CityModel { Key = "anbar", Name = "الأنبار (الرمادي)", Lat = 33.4258, Lon = 43.3000 },
+        new CityModel { Key = "babil", Name = "بابل (الحلة)", Lat = 32.4833, Lon = 44.4333 },
+        new CityModel { Key = "diwaniyah", Name = "الديوانية", Lat = 31.9928, Lon = 44.9256 },
+        new CityModel { Key = "diyala", Name = "ديالى (بعقوبة)", Lat = 33.7500, Lon = 44.6500 },
+        new CityModel { Key = "dhiqar", Name = "ذي قار (الناصرية)", Lat = 31.0500, Lon = 46.2667 },
+        new CityModel { Key = "maysan", Name = "ميسان (العمارة)", Lat = 31.8356, Lon = 47.1444 },
+        new CityModel { Key = "muthanna", Name = "المثنى (السماوة)", Lat = 31.3167, Lon = 45.2833 },
+        new CityModel { Key = "salahaddin", Name = "صلاح الدين (تكريت)", Lat = 34.6000, Lon = 43.6833 },
+        new CityModel { Key = "wasit", Name = "واسط (الكوت)", Lat = 32.5000, Lon = 45.8167 },
+        new CityModel { Key = "halabja", Name = "حلبجة", Lat = 35.1778, Lon = 45.9861 }
+    };
+
+    private string selectedCityKey = "";
+    private List<DailyForecast>? forecasts;
+    private bool isLoading = false;
+
+    private async Task LoadWeatherAsync()
+    {
+        if (string.IsNullOrEmpty(selectedCityKey)) return;
+
+        isLoading = true;
+        forecasts = null;
+
+        var city = iraqiCities.FirstOrDefault(c => c.Key == selectedCityKey);
+        if (city == null)
         {
-            Date = startDate.AddDays(index),
-            TemperatureC = Random.Shared.Next(-20, 55),
-            Summary = summaries[Random.Shared.Next(summaries.Length)]
-        }).ToArray();
+            isLoading = false;
+            return;
+        }
+
+        try
+        {
+            // استدعاء Open-Meteo API
+            var url = $"https://api.open-meteo.com/v1/forecast?latitude={city.Lat}&longitude={city.Lon}&daily=temperature_2m_max,temperature_2m_min,weather_code&forecast_days=5&timezone=auto";
+            var response = await Http.GetFromJsonAsync<OpenMeteoResponse>(url);
+
+            if (response?.Daily != null)
+            {
+                forecasts = new List<DailyForecast>();
+                for (int i = 0; i < response.Daily.Time.Count; i++)
+                {
+                    forecasts.Add(new DailyForecast
+                    {
+                        Date = DateTime.Parse(response.Daily.Time[i]),
+                        TempMax = (int)Math.Round(response.Daily.Temperature2mMax[i]),
+                        TempMin = (int)Math.Round(response.Daily.Temperature2mMin[i]),
+                        WeatherCode = response.Daily.WeatherCode[i]
+                    });
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching weather: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
 
-    public class WeatherForecast
+    // أيقونات مبنية على أكواد WMO
+    private string GetWeatherIcon(int code) => code switch
     {
-        public DateOnly Date { get; set; }
-        public int TemperatureC { get; set; }
-        public string? Summary { get; set; }
-        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+        0 => "☀️",
+        1 or 2 or 3 => "🌤️",
+        45 or 48 => "🌫️",
+        51 or 53 or 55 => "🌦️",
+        61 or 63 or 65 => "🌧️",
+        71 or 73 or 75 => "❄️",
+        80 or 81 or 82 => "🌧️",
+        95 or 96 or 99 => "⛈️",
+        _ => "🌡️"
+    };
+
+    // وصف الطقس بالعربية
+    private string GetWeatherDescription(int code) => code switch
+    {
+        0 => "صافٍ",
+        1 => "صافٍ غالباً",
+        2 => "غائم جزئياً",
+        3 => "غائم",
+        45 or 48 => "ضباب",
+        51 or 53 or 55 => "رذاذ",
+        61 or 63 or 65 => "مطر",
+        71 or 73 or 75 => "ثلج",
+        80 or 81 or 82 => "زخات مطر",
+        95 or 96 or 99 => "عاصفة رعدية",
+        _ => "غير معروف"
+    };
+
+    // النماذج (Models)
+    public class CityModel
+    {
+        public string Key { get; set; } = "";
+        public string Name { get; set; } = "";
+        public double Lat { get; set; }
+        public double Lon { get; set; }
+    }
+
+    public class OpenMeteoResponse
+    {
+        public DailyData? Daily { get; set; }
+    }
+
+    public class DailyData
+    {
+        public List<string> Time { get; set; } = new();
+        public List<double> Temperature2mMax { get; set; } = new();
+        public List<double> Temperature2mMin { get; set; } = new();
+        public List<int> WeatherCode { get; set; } = new();
+    }
+
+    public class DailyForecast
+    {
+        public DateTime Date { get; set; }
+        public int TempMax { get; set; }
+        public int TempMin { get; set; }
+        public int WeatherCode { get; set; }
     }
 }

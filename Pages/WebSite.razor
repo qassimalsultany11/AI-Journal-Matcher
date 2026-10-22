@@ -1,0 +1,251 @@
+﻿@page "/scientific-sites"
+
+<PageTitle>المواقع العلمية | AI Journal Matcher</PageTitle>
+
+<style>
+    .scientific-page {
+        background: #F8FAFC;
+        min-height: 100vh;
+        padding: 30px;
+        direction: rtl;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+        .page-header h1 {
+            font-weight: 800;
+            color: #1E293B;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .page-header p {
+            color: #64748B;
+            font-size: 16px;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+    /* شريط التصنيفات */
+    .category-filter {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 35px;
+    }
+
+    .category-btn {
+        padding: 8px 20px;
+        border-radius: 30px;
+        border: 1px solid #E2E8F0;
+        background: white;
+        color: #475569;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+        .category-btn:hover, .category-btn.active {
+            background: #6366F1;
+            color: white;
+            border-color: #6366F1;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+    /* شبكة الكروت */
+    .sites-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 25px;
+    }
+
+    .site-card {
+        background: white;
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        border: 1px solid #F1F5F9;
+        display: flex;
+        flex-direction: column;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .site-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            border-color: #E2E8F0;
+        }
+
+    .site-card-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .site-icon {
+        width: 55px;
+        height: 55px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 26px;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .site-title {
+        font-size: 18px;
+        font-weight: 800;
+        color: #1E293B;
+        margin: 0;
+        line-height: 1.3;
+    }
+
+    .site-category-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+        background: #F1F5F9;
+        color: #64748B;
+        margin-bottom: 12px;
+    }
+
+    .site-description {
+        color: #475569;
+        font-size: 13px;
+        line-height: 1.6;
+        flex-grow: 1;
+        margin-bottom: 20px;
+    }
+
+    .site-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        background: #F8FAFC;
+        color: #6366F1;
+        font-weight: 700;
+        font-size: 13px;
+        text-decoration: none;
+        border: 1px solid #E2E8F0;
+        transition: all 0.2s;
+    }
+
+        .site-link:hover {
+            background: #6366F1;
+            color: white;
+            border-color: #6366F1;
+        }
+</style>
+
+<div class="scientific-page">
+    <div class="page-header">
+        <h1>🔬 المواقع العلمية للباحثين</h1>
+        <p>دليلك الشامل لأهم قواعد البيانات، المنصات، والمصادر الأكاديمية العالمية والعربية لدعم بحثك العلمي.</p>
+    </div>
+
+    <!-- فلترة التصنيفات -->
+    <div class="category-filter">
+        <button class="category-btn @(selectedCategory == "الكل" ? "active" : "")" @onclick='() => selectedCategory = "الكل"'>الكل</button>
+        <button class="category-btn @(selectedCategory == "بحث أكاديمي" ? "active" : "")" @onclick='() => selectedCategory = "بحث أكاديمي"'>بحث أكاديمي</button>
+        <button class="category-btn @(selectedCategory == "وصول مفتوح" ? "active" : "")" @onclick='() => selectedCategory = "وصول مفتوح"'>وصول مفتوح</button>
+        <button class="category-btn @(selectedCategory == "مستودعات أبحاث" ? "active" : "")" @onclick='() => selectedCategory = "مستودعات أبحاث"'>مستودعات أبحاث</button>
+        <button class="category-btn @(selectedCategory == "تصنيف المجلات" ? "active" : "")" @onclick='() => selectedCategory = "تصنيف المجلات"'>تصنيف المجلات</button>
+        <button class="category-btn @(selectedCategory == "مصادر عربية" ? "active" : "")" @onclick='() => selectedCategory = "مصادر عربية"'>مصادر عربية</button>
+    </div>
+
+    <!-- شبكة المواقع -->
+    <div class="sites-grid">
+        @foreach (var site in FilteredSites)
+        {
+            <div class="site-card">
+                <div class="site-card-header">
+                    <div class="site-icon" style="background-color: @site.Color;">
+                        <i class="bi @site.Icon"></i>
+                    </div>
+                    <h5 class="site-title">@site.Title</h5>
+                </div>
+
+                <span class="site-category-badge">@site.Category</span>
+
+                <p class="site-description">@site.Description</p>
+
+                <a href="@site.Url" target="_blank" class="site-link">
+                    زيارة الموقع <i class="bi bi-box-arrow-up-left"></i>
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private string selectedCategory = "الكل";
+
+    private List<ScientificSite> allSites = new()
+    {
+        // ===== 1. محركات البحث الأكاديمية =====
+        new ScientificSite { Title = "Google Scholar", Description = "محرك البحث الأكاديمي الأشهر. يبحث في النصوص الكاملة للأدبيات العلمية عبر جميع التخصصات واللغات. مثالي للبدء في أي بحث.", Url = "https://scholar.google.com", Category = "بحث أكاديمي", Icon = "bi-search", Color = "#4285F4" },
+        new ScientificSite { Title = "Semantic Scholar", Description = "محرك بحث علمي مدعوم بالذكاء الاصطناعي. يساعدك في العثور على الأوراق الأكثر تأثيراً وتلخيصها، ويوفر روابط مباشرة للنسخ المفتوحة.", Url = "https://www.semanticscholar.org", Category = "بحث أكاديمي", Icon = "bi-robot", Color = "#1857B6" },
+        new ScientificSite { Title = "BASE", Description = "أحد أكبر محركات البحث للموارد الأكاديمية على الويب. يوفر نصوصاً كاملة لحوالي 60% من الوثائق المفهرسة، ويجمع من آلاف المستودعات.", Url = "https://www.base-search.net", Category = "بحث أكاديمي", Icon = "bi-globe2", Color = "#007BFF" },
+        new ScientificSite { Title = "CORE", Description = "أكبر مجمع في العالم للأوراق البحثية مفتوحة الوصول (Open Access). يجمع الأبحاث من المستودعات والمجلات حول العالم.", Url = "https://core.ac.uk", Category = "وصول مفتوح", Icon = "bi-unlock", Color = "#F57C00" },
+        new ScientificSite { Title = "OpenAlex", Description = "فهرس علمي مفتوح المصدر يربط الباحثين والمؤسسات والأبحاث. يعتمد عليه في التصنيفات العالمية الحديثة، وهو بديل قوي ومجاني.", Url = "https://openalex.org", Category = "وصول مفتوح", Icon = "bi-diagram-3", Color = "#10B981" },
+        new ScientificSite { Title = "Dimensions", Description = "قاعدة بيانات متعددة التخصصات تربط المنشورات والتمويل والبيانات. توفر تحليلات للاستشهادات وبيانات بديلة (Altmetrics).", Url = "https://app.dimensions.ai", Category = "بحث أكاديمي", Icon = "bi-bar-chart-steps", Color = "#6366F1" },
+
+        // ===== 2. قواعد البيانات والمجلات =====
+        new ScientificSite { Title = "PubMed", Description = "قاعدة البيانات المجانية التابعة للمعاهد الوطنية للصحة (NIH). المصدر الأول للأبحاث في الطب والعلوم الحيوية.", Url = "https://pubmed.ncbi.nlm.nih.gov", Category = "بحث أكاديمي", Icon = "bi-heart-pulse", Color = "#007bff" },
+        new ScientificSite { Title = "ScienceDirect", Description = "منصة Elsevier الرائدة. توفر وصولاً لقاعدة ضخمة من المقالات والكتب في العلوم والهندسة والطب.", Url = "https://www.sciencedirect.com", Category = "بحث أكاديمي", Icon = "bi-database", Color = "#FF6B00" },
+        new ScientificSite { Title = "IEEE Xplore", Description = "المصدر الأساسي للأبحاث في الهندسة الكهربائية، الإلكترونيات، وعلوم الحاسوب والتقنيات ذات الصلة.", Url = "https://ieeexplore.ieee.org", Category = "بحث أكاديمي", Icon = "bi-cpu", Color = "#00629B" },
+        new ScientificSite { Title = "JSTOR", Description = "أرشيف رقمي للمجلات الأكاديمية والكتب. قوي جداً في العلوم الإنسانية والاجتماعية، ويوفر نصوصاً كاملة.", Url = "https://www.jstor.org", Category = "بحث أكاديمي", Icon = "bi-archive", Color = "#B31B1B" },
+        new ScientificSite { Title = "DOAJ", Description = "دليل المجلات مفتوحة الوصول. قائمة منسقة تضم أكثر من 20,000 مجلة علمية محكمة عالية الجودة في جميع التخصصات.", Url = "https://doaj.org", Category = "وصول مفتوح", Icon = "bi-journal-check", Color = "#E11D48" },
+        new ScientificSite { Title = "DOAB", Description = "دليل الكتب الأكاديمية مفتوحة الوصول. يتيح البحث في آلاف الكتب العلمية المحكمة التي يمكن الوصول إليها مجاناً.", Url = "https://www.doabooks.org", Category = "وصول مفتوح", Icon = "bi-book", Color = "#8B5CF6" },
+
+        // ===== 3. مستودعات الأبحاث والمسودات =====
+        new ScientificSite { Title = "arXiv.org", Description = "مستودع مجاني للمسودات البحثية (Preprints) في الفيزياء، الرياضيات، علوم الحاسوب، والأحياء الكمية.", Url = "https://arxiv.org", Category = "مستودعات أبحاث", Icon = "bi-file-earmark-text", Color = "#B31B1B" },
+        new ScientificSite { Title = "bioRxiv", Description = "أرشيف مفتوح للمسودات البحثية في علوم الحياة. يمكنك الاطلاع على أحدث الأبحاث قبل نشرها الرسمي.", Url = "https://www.biorxiv.org", Category = "مستودعات أبحاث", Icon = "bi-dna", Color = "#059669" },
+        new ScientificSite { Title = "SSRN", Description = "شبكة أبحاث العلوم الاجتماعية. ممتازة للأبحاث الأولية، أوراق العمل، والمقالات في العلوم الاجتماعية والإنسانية والقانون.", Url = "https://www.ssrn.com", Category = "مستودعات أبحاث", Icon = "bi-people", Color = "#334155" },
+        new ScientificSite { Title = "OSF Preprints", Description = "منصة تديرها Center for Open Science. تستضيف العديد من خوادم المسودات المتخصصة (مثل PsyArXiv و SocArXiv).", Url = "https://osf.io/preprints/", Category = "مستودعات أبحاث", Icon = "bi-files", Color = "#6366F1" },
+        new ScientificSite { Title = "OATD", Description = "مصدر رئيسي للعثور على الرسائل الجامعية وأطروحات الدراسات العليا مفتوحة الوصول من جميع أنحاء العالم.", Url = "https://oatd.org", Category = "مستودعات أبحاث", Icon = "bi-mortarboard", Color = "#D97706" },
+        new ScientificSite { Title = "NDLTD", Description = "المكتبة الرقمية العالمية للرسائل الجامعية. توفر بحثاً في آلاف الأطروحات الإلكترونية من مؤسسات حول العالم.", Url = "https://ndltd.org", Category = "مستودعات أبحاث", Icon = "bi-globe-americas", Color = "#0EA5E9" },
+
+        // ===== 4. تصنيف المجلات ومعامل التأثير =====
+        new ScientificSite { Title = "SCImago Journal Rank", Description = "تصنيف المجلات بناءً على بيانات Scopus. يوفر Quartile (Q1-Q4) ومؤشر SJR لآلاف المجلات العالمية.", Url = "https://www.scimagojr.com", Category = "تصنيف المجلات", Icon = "bi-trophy", Color = "#F59E0B" },
+        new ScientificSite { Title = "Journal Citation Reports (JCR)", Description = "المرجع الرسمي لمعامل التأثير (Impact Factor). تابع لـ Clarivate، ويغطي آلاف المجلات في Web of Science.", Url = "https://clarivate.com/products/scientific-and-academic-research/research-analytics-evaluation-and-management-solutions/journal-citation-reports/", Category = "تصنيف المجلات", Icon = "bi-graph-up-arrow", Color = "#DC2626" },
+        new ScientificSite { Title = "Scopus Sources", Description = "الموقع الرسمي لفحص المجلات المفهرسة في Scopus. يظهر CiteScore والتصنيف المئوي للمجلة.", Url = "https://www.scopus.com/sources", Category = "تصنيف المجلات", Icon = "bi-check2-square", Color = "#EA580C" },
+
+        // ===== 5. مصادر عربية وأكاديمية =====
+        new ScientificSite { Title = "منصة أُجسر", Description = "مجلة علمية عربية محكمة تدعم النشر باللغة العربية، وتسعى للاعتراف الدولي عبر الانضمام لقواعد بيانات مثل Scopus و DOAJ.", Url = "https://arsco-ai.org", Category = "مصادر عربية", Icon = "bi-journal-richtext", Color = "#059669" },
+        new ScientificSite { Title = "نبراس", Description = "قاعدة بيانات ومكتبة رقمية عربية تابعة لمنظمة المجتمع العلمي العربي. توفر كتباً ودراسات وإحصاءات للباحثين.", Url = "https://arsco-ai.org", Category = "مصادر عربية", Icon = "bi-lamp", Color = "#D97706" },
+        new ScientificSite { Title = "دار المنظومة", Description = "أكبر قاعدة بيانات عربية للمجلات العلمية المحكمة. توفر وصولاً لآلاف المقالات العربية في جميع التخصصات.", Url = "https://www.mandumah.com", Category = "مصادر عربية", Icon = "bi-collection", Color = "#1E40AF" },
+        new ScientificSite { Title = "المجلات العلمية العراقية", Description = "دليل شامل للمجلات الأكاديمية العراقية المحكمة. يمكنك من خلاله البحث عن مجلات الجامعات العراقية.", Url = "https://iasj.net", Category = "مصادر عربية", Icon = "bi-flag", Color = "#DC2626" }
+    };
+
+    private List<ScientificSite> FilteredSites =>
+        selectedCategory == "الكل" ? allSites : allSites.Where(s => s.Category == selectedCategory).ToList();
+
+    public class ScientificSite
+    {
+        public string Title { get; set; } = "";
+        public string Description { get; set; } = "";
+        public string Url { get; set; } = "";
+        public string Category { get; set; } = "";
+        public string Icon { get; set; } = "";
+        public string Color { get; set; } = "";
+    }
+}

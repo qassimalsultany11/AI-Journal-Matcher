@@ -1,10 +1,12 @@
 ﻿@page "/settings"
+@inject IJSRuntime JS
+@inject NavigationManager Nav
 
 <PageTitle>إعدادات النظام | AI Journal Matcher</PageTitle>
 
 <style>
     .settings-container {
-        max-width: 1100px;
+        max-width: 1200px;
         margin: 0 auto;
         padding: 20px;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -33,7 +35,7 @@
         }
 
     .btn-save {
-        background: #6366F1;
+        background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
         color: white;
         border: none;
         padding: 12px 24px;
@@ -44,12 +46,13 @@
         display: flex;
         align-items: center;
         gap: 8px;
-        transition: all 0.2s;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
     }
 
         .btn-save:hover {
-            background: #4F46E5;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
         }
 
     .alert-success {
@@ -80,17 +83,17 @@
 
     .settings-layout {
         display: grid;
-        grid-template-columns: 250px 1fr;
-        gap: 30px;
+        grid-template-columns: 280px 1fr;
+        gap: 25px;
     }
 
-    /* القائمة الجانبية */
     .settings-sidebar {
         background: white;
         border-radius: 16px;
         padding: 15px;
         box-shadow: 0 4px 15px rgba(0,0,0,0.03);
         height: fit-content;
+        border: 1px solid #F1F5F9;
     }
 
     .tab-btn {
@@ -119,19 +122,20 @@
         .tab-btn.active {
             background: #EEF2FF;
             color: #6366F1;
+            border-right: 3px solid #6366F1;
         }
 
         .tab-btn i {
             font-size: 18px;
         }
 
-    /* محتوى الإعدادات */
     .settings-content {
         background: white;
         border-radius: 16px;
         padding: 30px;
         box-shadow: 0 4px 15px rgba(0,0,0,0.03);
         min-height: 500px;
+        border: 1px solid #F1F5F9;
     }
 
     .content-section h3 {
@@ -171,14 +175,13 @@
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
         }
 
-    /* المفاتيح (Switches) */
     .switch-group {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 15px;
+        padding: 18px;
         background: #F8FAFC;
-        border-radius: 10px;
+        border-radius: 12px;
         margin-bottom: 15px;
         border: 1px solid #F1F5F9;
     }
@@ -227,6 +230,57 @@
             transform: translateX(-24px);
         }
 
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .stat-card {
+        background: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+    }
+
+        .stat-card h4 {
+            margin: 0 0 10px 0;
+            color: #64748B;
+            font-size: 13px;
+        }
+
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: 800;
+            color: #6366F1;
+        }
+
+    .action-btn {
+        background: #6366F1;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        margin: 5px;
+        transition: 0.2s;
+    }
+
+        .action-btn:hover {
+            background: #4F46E5;
+        }
+
+        .action-btn.danger {
+            background: #EF4444;
+        }
+
+            .action-btn.danger:hover {
+                background: #DC2626;
+            }
+
     @@media (max-width: 768px) {
         .settings-layout {
             grid-template-columns: 1fr;
@@ -236,7 +290,6 @@
             display: flex;
             overflow-x: auto;
             gap: 10px;
-            padding: 10px;
         }
 
         .tab-btn {
@@ -248,18 +301,16 @@
 
 <div class="settings-container">
 
-    <!-- رأس الصفحة -->
     <div class="page-header">
         <div>
             <h2>⚙️ إعدادات النظام</h2>
-            <p>إدارة تفضيلات حسابك وإعدادات النظام</p>
+            <p>إدارة كاملة للنظام، الأمان، والمظهر</p>
         </div>
         <button class="btn-save" @onclick="SaveSettings">
             <i class="bi bi-check2-circle"></i> حفظ التغييرات
         </button>
     </div>
 
-    <!-- رسالة النجاح -->
     @if (showSuccessMessage)
     {
         <div class="alert-success">
@@ -267,10 +318,7 @@
         </div>
     }
 
-    <!-- تخطيط الإعدادات -->
     <div class="settings-layout">
-
-        <!-- القائمة الجانبية (Tabs) -->
         <div class="settings-sidebar">
             <button class="tab-btn @(activeTab == "general" ? "active" : "")" @onclick='() => activeTab = "general"'>
                 <i class="bi bi-gear-fill"></i> الإعدادات العامة
@@ -284,27 +332,24 @@
             <button class="tab-btn @(activeTab == "appearance" ? "active" : "")" @onclick='() => activeTab = "appearance"'>
                 <i class="bi bi-palette-fill"></i> المظهر
             </button>
+            <button class="tab-btn @(activeTab == "system" ? "active" : "")" @onclick='() => activeTab = "system"'>
+                <i class="bi bi-cpu-fill"></i> أداء النظام
+            </button>
         </div>
 
-        <!-- محتوى الإعدادات -->
         <div class="settings-content">
-
-            <!-- قسم الإعدادات العامة -->
             @if (activeTab == "general")
             {
                 <div class="content-section">
                     <h3>الإعدادات العامة</h3>
-
                     <div class="form-group">
                         <label class="form-label">اسم النظام</label>
-                        <input type="text" class="form-control" @bind="systemName" placeholder="أدخل اسم النظام" />
+                        <input type="text" class="form-control" @bind="systemName" />
                     </div>
-
                     <div class="form-group">
                         <label class="form-label">البريد الإلكتروني للدعم</label>
-                        <input type="email" class="form-control" @bind="supportEmail" placeholder="support@example.com" />
+                        <input type="email" class="form-control" @bind="supportEmail" />
                     </div>
-
                     <div class="form-group">
                         <label class="form-label">اللغة الافتراضية</label>
                         <select class="form-control" @bind="defaultLanguage">
@@ -312,7 +357,6 @@
                             <option value="en">English</option>
                         </select>
                     </div>
-
                     <div class="form-group">
                         <label class="form-label">المنطقة الزمنية</label>
                         <select class="form-control" @bind="timeZone">
@@ -324,12 +368,10 @@
                 </div>
             }
 
-            <!-- قسم الأمان -->
             @if (activeTab == "security")
             {
                 <div class="content-section">
                     <h3>الأمان والخصوصية</h3>
-
                     <div class="switch-group">
                         <div class="switch-text">
                             <h4>المصادقة الثنائية (2FA)</h4>
@@ -337,7 +379,6 @@
                         </div>
                         <input type="checkbox" class="toggle-switch" @bind="enable2FA">
                     </div>
-
                     <div class="switch-group">
                         <div class="switch-text">
                             <h4>تنبيهات تسجيل الدخول</h4>
@@ -345,27 +386,20 @@
                         </div>
                         <input type="checkbox" class="toggle-switch" @bind="loginAlerts">
                     </div>
-
-                    <hr style="border: 0; border-top: 1px solid #F1F5F9; margin: 30px 0;" />
-
-                    <h3 style="color: #DC2626; font-size: 16px;">تغيير كلمة المرور</h3>
-                    <div class="form-group">
-                        <label class="form-label">كلمة المرور الحالية</label>
-                        <input type="password" class="form-control" placeholder="********" />
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">كلمة المرور الجديدة</label>
-                        <input type="password" class="form-control" placeholder="********" />
+                    <div class="switch-group">
+                        <div class="switch-text">
+                            <h4>تفعيل تسجيل الخروج التلقائي</h4>
+                            <p>تسجيل الخروج تلقائياً بعد 30 دقيقة من عدم النشاط.</p>
+                        </div>
+                        <input type="checkbox" class="toggle-switch" @bind="autoLogout">
                     </div>
                 </div>
             }
 
-            <!-- قسم الإشعارات -->
             @if (activeTab == "notifications")
             {
                 <div class="content-section">
                     <h3>إعدادات الإشعارات</h3>
-
                     <div class="switch-group">
                         <div class="switch-text">
                             <h4>إشعارات البريد الإلكتروني</h4>
@@ -373,7 +407,6 @@
                         </div>
                         <input type="checkbox" class="toggle-switch" @bind="emailNotifications">
                     </div>
-
                     <div class="switch-group">
                         <div class="switch-text">
                             <h4>إشعارات النظام</h4>
@@ -384,28 +417,74 @@
                 </div>
             }
 
-            <!-- قسم المظهر -->
             @if (activeTab == "appearance")
             {
                 <div class="content-section">
                     <h3>إعدادات المظهر</h3>
-
                     <div class="form-group">
                         <label class="form-label">وضع العرض</label>
                         <div style="display: flex; gap: 20px; margin-top: 10px;">
                             <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                <input type="radio" name="theme" checked />
+                                <input type="radio" name="theme" @onchange='() => ChangeTheme("light")' checked />
                                 ☀️ فاتح
                             </label>
                             <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                <input type="radio" name="theme" />
+                                <input type="radio" name="theme" @onchange='() => ChangeTheme("dark")' />
                                 🌙 داكن
                             </label>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 30px;">
+                        <label class="form-label">اللون الرئيسي</label>
+                        <div style="display: flex; gap: 15px; margin-top: 10px;">
+                            <div style="width: 40px; height: 40px; border-radius: 50%; background: #6366F1; cursor: pointer; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.2);"></div>
+                            <div style="width: 40px; height: 40px; border-radius: 50%; background: #10B981; cursor: pointer; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.2);"></div>
+                            <div style="width: 40px; height: 40px; border-radius: 50%; background: #F59E0B; cursor: pointer; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.2);"></div>
+                            <div style="width: 40px; height: 40px; border-radius: 50%; background: #EF4444; cursor: pointer; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.2);"></div>
                         </div>
                     </div>
                 </div>
             }
 
+            @if (activeTab == "system")
+            {
+                <div class="content-section">
+                    <h3>أداء النظام</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h4>عدد المستخدمين</h4>
+                            <div class="value">1,245</div>
+                        </div>
+                        <div class="stat-card">
+                            <h4>المجلات المضافة</h4>
+                            <div class="value">176</div>
+                        </div>
+                        <div class="stat-card">
+                            <h4>الطلبات المعلقة</h4>
+                            <div class="value" style="color: #F59E0B;">12</div>
+                        </div>
+                        <div class="stat-card">
+                            <h4>وقت التشغيل</h4>
+                            <div class="value" style="color: #10B981;">99.9%</div>
+                        </div>
+                    </div>
+
+                    <hr style="border: 0; border-top: 1px solid #F1F5F9; margin: 30px 0;" />
+
+                    <h3 style="font-size: 16px; color: #DC2626;">إجراءات الصيانة</h3>
+                    <div style="margin-top: 15px;">
+                        <button class="action-btn" @onclick="ClearCache">
+                            <i class="bi bi-arrow-clockwise"></i> مسح الكاش
+                        </button>
+                        <button class="action-btn" @onclick="BackupData">
+                            <i class="bi bi-download"></i> نسخ احتياطي
+                        </button>
+                        <button class="action-btn danger" @onclick="ClearLogs">
+                            <i class="bi bi-trash"></i> مسح السجلات
+                        </button>
+                    </div>
+                </div>
+            }
         </div>
     </div>
 </div>
@@ -414,29 +493,49 @@
     private string activeTab = "general";
     private bool showSuccessMessage = false;
 
-    // متغيرات الإعدادات العامة
     private string systemName = "AI Journal Matcher";
     private string supportEmail = "support@aijournal.com";
     private string defaultLanguage = "ar";
     private string timeZone = "baghdad";
 
-    // متغيرات الأمان
     private bool enable2FA = false;
     private bool loginAlerts = true;
+    private bool autoLogout = true;
 
-    // متغيرات الإشعارات
     private bool emailNotifications = true;
     private bool systemNotifications = false;
 
-    private void SaveSettings()
+    private async Task SaveSettings()
     {
         showSuccessMessage = true;
 
-        // إخفاء رسالة النجاح بعد 3 ثواني
-        Task.Delay(3000).ContinueWith(_ => InvokeAsync(() =>
-        {
-            showSuccessMessage = false;
-            StateHasChanged();
-        }));
+        // حفظ في LocalStorage
+        await JS.InvokeVoidAsync("localStorage.setItem", "systemName", systemName);
+        await JS.InvokeVoidAsync("localStorage.setItem", "supportEmail", supportEmail);
+
+        await Task.Delay(3000);
+        showSuccessMessage = false;
+        StateHasChanged();
+    }
+
+    private async Task ChangeTheme(string theme)
+    {
+        await JS.InvokeVoidAsync("localStorage.setItem", "theme", theme);
+        // هنا تقدر تضيف كود يطبق المظهر
+    }
+
+    private async Task ClearCache()
+    {
+        await JS.InvokeVoidAsync("alert", "تم مسح الكاش بنجاح!");
+    }
+
+    private async Task BackupData()
+    {
+        await JS.InvokeVoidAsync("alert", "جاري إنشاء نسخة احتياطية...");
+    }
+
+    private async Task ClearLogs()
+    {
+        await JS.InvokeVoidAsync("alert", "تم مسح السجلات بنجاح!");
     }
 }

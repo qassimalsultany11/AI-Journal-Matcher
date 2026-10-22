@@ -1,0 +1,1016 @@
+﻿@page "/admin"
+@using System.Text.Json
+@using System.Text
+@using ClosedXML.Excel
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+
+<PageTitle>لوحة تحكم المطور | AI Journal Matcher</PageTitle>
+
+<style>
+    .progress-container {
+        margin-top: 25px;
+        background: #F8FAFC;
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid #E2E8F0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .progress-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        font-size: 14px;
+        font-weight: bold;
+        color: #1E293B;
+    }
+
+    .progress-bar-bg {
+        width: 100%;
+        height: 12px;
+        background: #E2E8F0;
+        border-radius: 10px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #10B981, #34D399, #10B981);
+        background-size: 200% 100%;
+        border-radius: 10px;
+        transition: width 0.3s ease;
+        animation: gradientMove 2s linear infinite;
+    }
+
+    @@keyframes gradientMove {
+        0% {
+            background-position: 100% 0;
+        }
+
+        100% {
+            background-position: -100% 0;
+        }
+    }
+
+    .journal-ticker {
+        margin-top: 15px;
+        font-size: 13px;
+        color: #64748B;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #FFFFFF;
+        padding: 10px 15px;
+        border-radius: 8px;
+        border: 1px dashed #CBD5E1;
+    }
+
+        .journal-ticker i {
+            color: #10B981;
+            animation: spin 1s linear infinite;
+        }
+
+    @@keyframes spin {
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .journal-name-text {
+        font-weight: bold;
+        color: #1E293B;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @@keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(5px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .limit-input-group {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
+        background: #F8FAFC;
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid #E2E8F0;
+    }
+
+    .limit-input {
+        width: 120px;
+        padding: 10px;
+        border: 2px solid #CBD5E1;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: bold;
+        text-align: center;
+        color: #1E293B;
+    }
+
+        .limit-input:focus {
+            outline: none;
+            border-color: #6366F1;
+        }
+
+    .extend-dropdown {
+        position: relative;
+        display: inline-block;
+    }
+
+    .extend-menu {
+        display: none;
+        position: absolute;
+        background-color: white;
+        min-width: 160px;
+        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+        z-index: 1;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #E2E8F0;
+        top: 100%;
+        right: 0;
+    }
+
+    .extend-dropdown:hover .extend-menu {
+        display: block;
+    }
+
+    .extend-menu button {
+        color: black;
+        padding: 10px 16px;
+        text-decoration: none;
+        display: block;
+        width: 100%;
+        text-align: right;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        color: #334155;
+    }
+
+        .extend-menu button:hover {
+            background-color: #F1F5F9;
+        }
+
+    .start-btn {
+        background: #10B981;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.3s;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+        .start-btn:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(16, 185, 129, 0.4);
+        }
+
+        .start-btn:disabled {
+            background: #CBD5E1;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+</style>
+
+<!-- شاشة تحميل -->
+@if (!isAuthorized)
+{
+    <div style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column;">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"><span class="visually-hidden">جاري التحميل...</span></div>
+        <p style="margin-top: 15px; color: #64748B; font-weight: bold;">جاري التحقق من الصلاحيات...</p>
+    </div>
+}
+else
+{
+    <div style="padding: 30px; direction: rtl;">
+        <!-- الهيدر -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <div>
+                <h1 style="color: #1E293B; font-weight: 800; margin: 0;">لوحة تحكم المطور 🛡️</h1>
+                <p style="margin: 5px 0 0 0; color: #64748B; font-size: 14px;">إدارة كاملة للنظام والصلاحيات والإعدادات</p>
+            </div>
+            <span style="color: #64748B; font-size: 14px; background: #F1F5F9; padding: 8px 15px; border-radius: 8px;">مرحباً بك، @currentUserName</span>
+        </div>
+
+        <!-- التابات -->
+        <div style="display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #E2E8F0; padding-bottom: 10px; overflow-x: auto;">
+            <button style="background: @(activeTab == "pending" ? "#6366F1" : "transparent"); color: @(activeTab == "pending" ? "white" : "#64748B"); border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; white-space: nowrap;" @onclick='() => activeTab = "pending"'>
+                <i class="bi bi-person-plus"></i> طلبات الانضمام (@pendingAdmins.Count)
+            </button>
+            <button style="background: @(activeTab == "users" ? "#6366F1" : "transparent"); color: @(activeTab == "users" ? "white" : "#64748B"); border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; white-space: nowrap;" @onclick='() => activeTab = "users"'>
+                <i class="bi bi-people"></i> إدارة الصلاحيات
+            </button>
+            <button style="background: @(activeTab == "import" ? "#6366F1" : "transparent"); color: @(activeTab == "import" ? "white" : "#64748B"); border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; white-space: nowrap;" @onclick='() => activeTab = "import"'>
+                <i class="bi bi-file-earmark-excel"></i> استيراد مجلات Scopus
+            </button>
+            @if (currentUserRole == "developer")
+            {
+                <button style="background: @(activeTab == "settings" ? "#6366F1" : "transparent"); color: @(activeTab == "settings" ? "white" : "#64748B"); border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; white-space: nowrap;" @onclick='() => activeTab = "settings"'>
+                    <i class="bi bi-gear-fill"></i> إعدادات الواتساب
+                </button>
+            }
+        </div>
+
+        <!-- التاب 1: طلبات الانضمام -->
+        @if (activeTab == "pending")
+        {
+            <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #E2E8F0;">
+                <h2 style="font-size: 18px; color: #1E293B; margin-bottom: 20px; border-right: 4px solid #6366F1; padding-right: 10px;">طلبات الانضمام الجديدة</h2>
+                @if (pendingAdmins.Count == 0)
+                {
+                    <div style="text-align: center; padding: 50px 20px;">
+                        <i class="bi bi-inbox" style="font-size: 50px; color: #CBD5E1;"></i>
+                        <p style="color: #64748B; margin-top: 15px; font-weight: 600;">لا توجد طلبات معلقة حالياً.</p>
+                    </div>
+                }
+                else
+                {
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #E2E8F0; text-align: right;">
+                                <th style="padding: 12px; color: #64748B; font-size: 13px;">الاسم الكامل</th>
+                                <th style="padding: 12px; color: #64748B; font-size: 13px;">البريد الإلكتروني</th>
+                                <th style="padding: 12px; color: #64748B; font-size: 13px;">الجامعة</th>
+                                <th style="padding: 12px; color: #64748B; font-size: 13px;">الصلاحية المطلوبة</th>
+                                <th style="padding: 12px; color: #64748B; font-size: 13px;">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var u in pendingAdmins)
+                            {
+                                <tr style="border-bottom: 1px solid #F1F5F9;">
+                                    <td style="padding: 15px; font-weight: 600; color: #1E293B;">@u.full_name</td>
+                                    <td style="padding: 15px; color: #334155;">@u.email</td>
+                                    <td style="padding: 15px; color: #64748B;">@u.university</td>
+                                    <td style="padding: 15px;">
+                                        <span style="background: @(u.role == "admin" ? "#FEF3C7" : "#EEF2FF"); color: @(u.role == "admin" ? "#D97706" : "#6366F1"); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;">
+                                            @(u.role == "admin" ? "مدير نظام" : "باحث")
+                                        </span>
+                                    </td>
+                                    <td style="padding: 15px; display: flex; gap: 8px;">
+                                        <button style="background: #10B981; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px;" @onclick="() => ApproveAdmin(u.id, u.role)">موافقة ✓</button>
+                                        <button style="background: #EF4444; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px;" @onclick="() => RejectAdmin(u.id)">رفض ✗</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        }
+
+        <!-- التاب 2: إدارة المستخدمين -->
+        @if (activeTab == "users")
+        {
+            <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #E2E8F0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                    <h2 style="font-size: 18px; color: #1E293B; margin: 0; border-right: 4px solid #6366F1; padding-right: 10px;">إدارة جميع الحسابات</h2>
+                    <div style="position: relative;">
+                        <i class="bi bi-search" style="position: absolute; left: 12px; top: 12px; color: #94A3B8;"></i>
+                        <input type="text" @bind="searchQuery" @bind:event="oninput" placeholder="ابحث بالاسم أو البريد..." style="padding: 10px 15px 10px 40px; border: 1px solid #CBD5E1; border-radius: 8px; width: 300px; font-size: 14px;" />
+                    </div>
+                </div>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid #E2E8F0; text-align: right;">
+                            <th style="padding: 12px; color: #64748B; font-size: 13px;">الاسم</th>
+                            <th style="padding: 12px; color: #64748B; font-size: 13px;">البريد</th>
+                            <th style="padding: 12px; color: #64748B; font-size: 13px;">الصلاحية</th>
+                            <th style="padding: 12px; color: #64748B; font-size: 13px;">الحالة</th>
+                            <th style="padding: 12px; color: #64748B; font-size: 13px;">الإجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var u in FilteredUsers())
+                        {
+                            <tr style="border-bottom: 1px solid #F1F5F9;">
+                                <td style="padding: 15px; font-weight: 600; color: #1E293B;">@u.full_name</td>
+                                <td style="padding: 15px; color: #334155;">@u.email</td>
+                                <td style="padding: 15px;">
+                                    <span style="background: @(u.role == "developer" ? "#F3E8FF" : (u.role == "admin" ? "#EEF2FF" : "#F1F5F9")); color: @(u.role == "developer" ? "#9333EA" : (u.role == "admin" ? "#6366F1" : "#475569")); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;">
+                                        @(u.role == "developer" ? "مطور نظام" : (u.role == "admin" ? "مدير نظام" : "باحث"))
+                                    </span>
+                                </td>
+                                <td style="padding: 15px;">
+                                    @if (u.is_suspended)
+                                    {
+                                        <span style="background: #F3F4F6; color: #6B7280; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;"><i class="bi bi-lock-fill"></i> موقوف</span>
+                                    }
+                                    else if (u.is_rejected)
+                                    {
+                                        <span style="background: #FEF2F2; color: #DC2626; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;"><i class="bi bi-x-circle-fill"></i> مرفوض</span>
+                                    }
+                                    else if (u.is_approved)
+                                    {
+                                        <span style="background: #DCFCE7; color: #166534; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;"><i class="bi bi-check-circle-fill"></i> مؤكد</span>
+                                    }
+                                    else
+                                    {
+                                        <span style="background: #FEF3C7; color: #D97706; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;"><i class="bi bi-hourglass-split"></i> قيد الانتظار</span>
+                                    }
+                                </td>
+                                <td style="padding: 15px;">
+                                    @if (u.id == currentUserId)
+                                    {
+                                        <span style="color: #94A3B8; font-size: 12px;">(أنت) لا يمكنك تعديل حسابك</span>
+                                    }
+                                    else if (u.role == "developer")
+                                    {
+                                        <span style="color: #94A3B8; font-size: 12px;">لا يمكن تعديل حساب المطور</span>
+                                    }
+                                    else if (u.is_suspended)
+                                    {
+                                        <div style="display: flex; gap: 8px;">
+                                            <button style="background: #10B981; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;" @onclick="() => ToggleSuspend(u.id, false)">تفعيل الحساب</button>
+                                        </div>
+                                    }
+                                    else if (u.is_rejected)
+                                    {
+                                        <div style="display: flex; gap: 8px;">
+                                            <button style="background: #10B981; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;" @onclick="() => ApproveAdmin(u.id, u.role)">تفعيل</button>
+                                        </div>
+                                    }
+                                    else if (u.is_approved)
+                                    {
+                                        <div style="display: flex; gap: 8px; align-items: center;">
+                                            <button style="background: #6366F1; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;" @onclick='() => ChangeRole(u.id, "admin")'>ترقية إلى مدير</button>
+                                            <button style="background: #EF4444; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;" @onclick="() => ToggleSuspend(u.id, true)">إيقاف الحساب</button>
+                                            <div class="extend-dropdown">
+                                                <button style="background: #F59E0B; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">تمديد الصلاحية <i class="bi bi-caret-down-fill"></i></button>
+                                                <div class="extend-menu">
+                                                    <button @onclick="() => ExtendValidity(u.id, 1)">شهر واحد</button>
+                                                    <button @onclick="() => ExtendValidity(u.id, 2)">شهرين</button>
+                                                    <button @onclick="() => ExtendValidity(u.id, 3)">3 أشهر</button>
+                                                    <button @onclick="() => ExtendValidity(u.id, 6)">6 أشهر</button>
+                                                    <button @onclick="() => ExtendValidity(u.id, 12)">سنة</button>
+                                                    <button @onclick="() => ExtendValidity(u.id, 24)">سنتين</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div style="display: flex; gap: 8px;">
+                                            <button style="background: #10B981; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;" @onclick="() => ApproveAdmin(u.id, u.role)">موافقة</button>
+                                            <button style="background: #EF4444; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;" @onclick="() => RejectAdmin(u.id)">رفض</button>
+                                        </div>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        <!-- التاب 3: استيراد سكوبس -->
+        @if (activeTab == "import")
+        {
+            <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #E2E8F0;">
+                <div style="border-right: 4px solid #10B981; padding-right: 10px; margin-bottom: 25px;">
+                    <h2 style="font-size: 18px; color: #1E293B; margin: 0;">استيراد مجلات Scopus</h2>
+                    <p style="color: #64748B; margin-top: 5px; font-size: 13px;">قم برفع ملف الإكسل، وحدد عدد المجلات، ثم ابدأ المزامنة يدوياً.</p>
+                </div>
+
+                <!-- حالة ما قبل اختيار الملف -->
+                @if (string.IsNullOrEmpty(currentFileName) && !isImporting)
+                {
+                    <div style="border: 2px dashed #10B981; border-radius: 16px; padding: 50px 20px; text-align: center; background: #F0FDF4;">
+                        <div style="background: white; width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);">
+                            <i class="bi bi-file-earmark-excel" style="font-size: 40px; color: #10B981;"></i>
+                        </div>
+                        <h3 style="color: #1E293B; font-weight: 700; margin-bottom: 10px;">اسحب وأفلت ملف الإكسل هنا</h3>
+                        <div style="position: relative; display: inline-block;">
+                            <button style="background: #10B981; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px;">
+                                <i class="bi bi-folder2-open"></i> اختر ملفاً من جهازك
+                            </button>
+                            <InputFile OnChange="HandleFileSelected" accept=".xlsx, .xls" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;" />
+                        </div>
+                    </div>
+                }
+
+                <!-- حالة معاينة الملف بعد الاختيار -->
+                @if (!string.IsNullOrEmpty(currentFileName) && !isImporting)
+                {
+                    <div style="background: #F8FAFC; border-radius: 12px; padding: 20px; border: 1px solid #E2E8F0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h3 style="margin: 0; font-size: 16px; color: #1E293B;"><i class="bi bi-file-earmark-check" style="color: #10B981;"></i> تم تحميل الملف: @currentFileName</h3>
+                            <button style="background: #EF4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;" @onclick="ResetImport">إلغاء</button>
+                        </div>
+
+                        <div class="limit-input-group">
+                            <label style="font-weight: bold; color: #1E293B;">عدد المجلات المطلوب إدخالها من هذا الملف:</label>
+                            <input type="number" class="limit-input" @bind="maxJournalsToImport" min="1" max="100000" />
+                            <span style="color: #64748B; font-size: 13px;">(الحد الأقصى: @totalRowsInFile مجلة)</span>
+                        </div>
+
+                        <!-- معاينة أول 5 مجلات -->
+                        <h4 style="font-size: 14px; color: #334155; margin-bottom: 10px;">معاينة أول 5 مجلات:</h4>
+                        <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;">
+                            <thead>
+                                <tr style="background: #F1F5F9; text-align: right;">
+                                    <th style="padding: 10px; font-size: 12px; color: #64748B;">اسم المجلة</th>
+                                    <th style="padding: 10px; font-size: 12px; color: #64748B;">الناشر</th>
+                                    <th style="padding: 10px; font-size: 12px; color: #64748B;">الربع</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var j in previewJournals)
+                                {
+                                    <tr style="border-bottom: 1px solid #F1F5F9;">
+                                        <td style="padding: 10px; font-size: 13px;">@j.Name</td>
+                                        <td style="padding: 10px; font-size: 13px;">@j.Publisher</td>
+                                        <td style="padding: 10px; font-size: 13px;">@j.Quartile</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+
+                        <div style="margin-top: 20px; text-align: left;">
+                            <button class="start-btn" @onclick="StartImport">
+                                <i class="bi bi-cloud-arrow-up-fill"></i> بدء المزامنة والإدخال
+                            </button>
+                        </div>
+                    </div>
+                }
+
+                <!-- حالة جاري الاستيراد -->
+                @if (isImporting)
+                {
+                    <div class="progress-container">
+                        <div class="progress-header">
+                            <span>جاري معالجة واستيراد المجلات...</span>
+                            <span>@progressPercentage%</span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" style="width: @progressPercentage%;"></div>
+                        </div>
+                        @if (!string.IsNullOrEmpty(currentJournalName))
+                        {
+                            <div class="journal-ticker">
+                                <i class="bi bi-arrow-repeat"></i>
+                                <span>جاري إدخال:</span>
+                                <span class="journal-name-text">@currentJournalName</span>
+                            </div>
+                        }
+                        <div style="margin-top: 15px; text-align: left;">
+                            <button class="btn btn-danger" @onclick="CancelImport" style="background: #EF4444; color: white; border: none; padding: 8px 20px; border-radius: 6px; font-weight: bold; cursor: pointer;">
+                                <i class="bi bi-stop-circle"></i> إيقاف العملية
+                            </button>
+                        </div>
+                    </div>
+                }
+
+                <!-- رسالة النتيجة -->
+                @if (!string.IsNullOrEmpty(importMessage))
+                {
+                    <div style="margin-top: 25px; padding: 20px; border-radius: 12px; background: #DCFCE7; color: #166534; border: 1px solid #BBF7D0; font-weight: 600; display: flex; align-items: center; gap: 10px;">
+                        <i class="bi bi-check-circle-fill" style="font-size: 20px;"></i>
+                        @importMessage
+                    </div>
+                }
+            </div>
+        }
+
+        <!-- التاب 4: إعدادات الواتساب -->
+        @if (activeTab == "settings" && currentUserRole == "developer")
+        {
+            <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #E2E8F0;">
+                <div style="border-right: 4px solid #9333EA; padding-right: 10px; margin-bottom: 25px;">
+                    <h2 style="font-size: 18px; color: #1E293B; margin: 0;">إعدادات خدمة الواتساب (UltraMsg)</h2>
+                    <p style="color: #64748B; margin-top: 5px; font-size: 13px;">تنبيه: يتم حفظ الإعدادات مرة واحدة فقط. لتعديلها لاحقاً، يرجى التواصل مع المطور.</p>
+                </div>
+
+                @if (!string.IsNullOrEmpty(settingsMessage))
+                {
+                    <div style="margin-bottom: 20px; padding: 15px; border-radius: 8px; background: @(settingsMessage.Contains("خطأ") ? "#FEF2F2" : "#DCFCE7"); color: @(settingsMessage.Contains("خطأ") ? "#DC2626" : "#166534"); border: 1px solid @(settingsMessage.Contains("خطأ") ? "#FECACA" : "#BBF7D0"); font-weight: 600;">
+                        @settingsMessage
+                    </div>
+                }
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 800px;">
+                    <div>
+                        <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #334155;">Instance ID</label>
+                        <input type="text" @bind="whatsappInstanceId" style="width: 100%; padding: 12px; border: 1px solid #CBD5E1; border-radius: 8px; font-family: monospace;" dir="ltr" disabled="@isSettingsSaved" />
+                    </div>
+                    <div>
+                        <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #334155;">Token</label>
+                        <input type="text" @bind="whatsappToken" style="width: 100%; padding: 12px; border: 1px solid #CBD5E1; border-radius: 8px; font-family: monospace;" dir="ltr" disabled="@isSettingsSaved" />
+                    </div>
+                </div>
+
+                <div style="margin-top: 25px; display: flex; gap: 15px;">
+                    <button style="background: #9333EA; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; @(isSettingsSaved ? "opacity: 0.5; cursor: not-allowed;" : "")" @onclick="SaveWhatsAppSettings" disabled="@isSettingsSaved">
+                        <i class="bi bi-save"></i> حفظ الإعدادات (مرة واحدة فقط)
+                    </button>
+                    <button style="background: #F1F5F9; color: #334155; border: 1px solid #CBD5E1; padding: 12px 30px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px;" @onclick="LoadSettings">
+                        <i class="bi bi-arrow-clockwise"></i> تحديث من قاعدة البيانات
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private string activeTab = "pending";
+    private List<UserData> pendingAdmins = new();
+    private List<UserData> allUsers = new();
+    private string importMessage = "";
+    private string searchQuery = "";
+    private string currentUserName = "";
+    private long currentUserId = 0;
+    private string currentUserRole = "";
+    private bool isAuthorized = false;
+
+    // متغيرات الاستيراد
+    private bool isImporting = false;
+    private int progressPercentage = 0;
+    private string currentJournalName = "";
+    private int maxJournalsToImport = 1000;
+    private CancellationTokenSource? importCts;
+
+    // متغيرات الملف
+    private string currentFileName = "";
+    private int totalRowsInFile = 0;
+    private List<PreviewJournal> previewJournals = new();
+    private List<JournalData> allParsedJournals = new(); // نخزن كل البيانات هنا بعد القراءة
+
+    // متغيرات الإعدادات
+    private string whatsappInstanceId = "";
+    private string whatsappToken = "";
+    private string settingsMessage = "";
+    private bool isSettingsSaved = false;
+
+    private string supabaseUrl = "https://dayowfmmqtoyewjgnptf.supabase.co";
+    private string supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRheW93Zm1tcXRveWV3amducHRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwMTI4MTcsImV4cCI6MjEwNjU4ODgxN30.IcR-HI9AZOdsWyg93PURcm3riWzqzd7r0v69P0pzNTc";
+
+    private List<UserData> FilteredUsers()
+    {
+        if (string.IsNullOrWhiteSpace(searchQuery)) return allUsers;
+        return allUsers.Where(u =>
+            (u.full_name != null && u.full_name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)) ||
+            (u.email != null && u.email.Contains(searchQuery, StringComparison.OrdinalIgnoreCase))
+        ).ToList();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var userIdStr = await JS.InvokeAsync<string>("localStorage.getItem", "userId");
+            if (string.IsNullOrEmpty(userIdStr) || !long.TryParse(userIdStr, out var userId)) { Nav.NavigateTo("/login"); return; }
+            currentUserId = userId;
+
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{supabaseUrl}/rest/v1/users?id=eq.{userId}&select=*");
+            request.Headers.Add("apikey", supabaseKey);
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
+            var response = await Http.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode) { Nav.NavigateTo("/"); return; }
+
+            var json = await response.Content.ReadAsStringAsync();
+            var users = JsonSerializer.Deserialize<List<UserData>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            if (users == null || users.Count == 0) { Nav.NavigateTo("/login"); return; }
+
+            var currentUser = users[0];
+            currentUserRole = currentUser.role;
+
+            if ((currentUser.role != "developer" && currentUser.role != "admin") || !currentUser.is_approved)
+            {
+                Nav.NavigateTo("/");
+                return;
+            }
+
+            isAuthorized = true;
+            currentUserName = currentUser.full_name ?? currentUser.email;
+
+            await LoadData();
+            await LoadSettings();
+        }
+        catch { Nav.NavigateTo("/login"); }
+    }
+
+    private async Task LoadData()
+    {
+        var req1 = new HttpRequestMessage(HttpMethod.Get, $"{supabaseUrl}/rest/v1/users?is_approved=eq.false&is_rejected=eq.false&is_suspended=eq.false&select=*");
+        req1.Headers.Add("apikey", supabaseKey);
+        req1.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
+        var res1 = await Http.SendAsync(req1);
+        if (res1.IsSuccessStatusCode)
+        {
+            var json1 = await res1.Content.ReadAsStringAsync();
+            pendingAdmins = JsonSerializer.Deserialize<List<UserData>>(json1, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
+        }
+
+        var req2 = new HttpRequestMessage(HttpMethod.Get, $"{supabaseUrl}/rest/v1/users?select=*");
+        req2.Headers.Add("apikey", supabaseKey);
+        req2.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
+        var res2 = await Http.SendAsync(req2);
+        if (res2.IsSuccessStatusCode)
+        {
+            var json2 = await res2.Content.ReadAsStringAsync();
+            allUsers = JsonSerializer.Deserialize<List<UserData>>(json2, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
+        }
+    }
+
+    private async Task LoadSettings()
+    {
+        settingsMessage = "";
+        var req = new HttpRequestMessage(HttpMethod.Get, $"{supabaseUrl}/rest/v1/settings?select=*");
+        req.Headers.Add("apikey", supabaseKey);
+        req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
+        var res = await Http.SendAsync(req);
+        if (res.IsSuccessStatusCode)
+        {
+            var json = await res.Content.ReadAsStringAsync();
+            var settings = JsonSerializer.Deserialize<List<SettingData>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            if (settings != null && settings.Count > 0)
+            {
+                whatsappInstanceId = settings.FirstOrDefault(s => s.key == "whatsapp_instance_id")?.value ?? "";
+                whatsappToken = settings.FirstOrDefault(s => s.key == "whatsapp_token")?.value ?? "";
+                isSettingsSaved = true; // تعطيل زر الحفظ
+            }
+            else
+            {
+                isSettingsSaved = false;
+            }
+        }
+    }
+
+    private async Task SaveWhatsAppSettings()
+    {
+        settingsMessage = "";
+
+        // التحقق المسبق لمنع التكرار
+        var checkReq = new HttpRequestMessage(HttpMethod.Get, $"{supabaseUrl}/rest/v1/settings?select=id");
+        checkReq.Headers.Add("apikey", supabaseKey);
+        checkReq.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
+        var checkRes = await Http.SendAsync(checkReq);
+        var checkJson = await checkRes.Content.ReadAsStringAsync();
+        var existing = JsonSerializer.Deserialize<List<SettingData>>(checkJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+        if (existing != null && existing.Count > 0)
+        {
+            settingsMessage = "لا يمكن الحفظ! الإعدادات موجودة مسبقاً. يرجى التواصل مع المطور للتعديل.";
+            return;
+        }
+
+        try
+        {
+            await InsertSetting("whatsapp_instance_id", whatsappInstanceId);
+            await InsertSetting("whatsapp_token", whatsappToken);
+            isSettingsSaved = true; // تعطيل الزر بعد الحفظ
+            settingsMessage = "تم حفظ الإعدادات بنجاح! لن تتمكن من الحفظ مرة أخرى.";
+        }
+        catch (Exception ex)
+        {
+            settingsMessage = $"خطأ أثناء الحفظ: {ex.Message}";
+        }
+    }
+
+    private async Task InsertSetting(string key, string value)
+    {
+        var payload = new { key = key, value = value, updated_at = DateTime.UtcNow };
+        var json = JsonSerializer.Serialize(payload);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var req = new HttpRequestMessage(HttpMethod.Post, $"{supabaseUrl}/rest/v1/settings");
+        req.Headers.Add("apikey", supabaseKey);
+        req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
+        req.Content = content;
+        var response = await Http.SendAsync(req);
+        if (!response.IsSuccessStatusCode) { var err = await response.Content.ReadAsStringAsync(); throw new Exception(err); }
+    }
+
+    // دوال الاستيراد الجديدة
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        if (!await VerifyAdminBeforeAction()) { importMessage = "غير مصرح لك بهذا الإجراء."; return; }
+
+        importMessage = "";
+        var file = e.File;
+        currentFileName = file.Name;
+        previewJournals.Clear();
+        allParsedJournals.Clear();
+
+        try
+        {
+            using var stream = file.OpenReadStream(maxAllowedSize: 62914560);
+            using var memoryStream = new MemoryStream();
+            await stream.CopyToAsync(memoryStream);
+            memoryStream.Position = 0;
+
+            using var workbook = new XLWorkbook(memoryStream);
+            var worksheet = workbook.Worksheet(1);
+
+            int colName = -1, colPublisher = -1, colCountry = -1, colQuartile = -1, colImpact = -1, colUrl = -1, colScope = -1;
+            var headerRow = worksheet.Row(1);
+            foreach (var cell in headerRow.CellsUsed())
+            {
+                var header = cell.GetString().Trim().ToLower();
+                if (header.Contains("source title") || header == "title") colName = cell.Address.ColumnNumber;
+                else if (header == "publisher") colPublisher = cell.Address.ColumnNumber;
+                else if (header == "country") colCountry = cell.Address.ColumnNumber;
+                else if (header.Contains("quartile")) colQuartile = cell.Address.ColumnNumber;
+                else if (header.Contains("citescore") || header.Contains("impact factor")) colImpact = cell.Address.ColumnNumber;
+                else if (header == "link" || header == "url" || header.Contains("website")) colUrl = cell.Address.ColumnNumber;
+                else if (header.Contains("coverage") || header.Contains("subject area")) colScope = cell.Address.ColumnNumber;
+            }
+
+            if (colName == -1) { importMessage = "خطأ: لم يتم العثور على عمود اسم المجلة (Source Title)."; currentFileName = ""; return; }
+
+            totalRowsInFile = worksheet.RowsUsed().Count() - 1;
+
+            // معاينة أول 5 مجلات
+            foreach (var row in worksheet.RowsUsed().Skip(1).Take(5))
+            {
+                var journalName = row.Cell(colName).GetString().Trim();
+                if (string.IsNullOrWhiteSpace(journalName)) continue;
+
+                previewJournals.Add(new PreviewJournal
+                {
+                    Name = journalName,
+                    Publisher = colPublisher != -1 ? row.Cell(colPublisher).GetString().Trim() : "N/A",
+                    Quartile = colQuartile != -1 ? row.Cell(colQuartile).GetString().Trim().Split(' ')[0] : "N/A"
+                });
+            }
+
+            // قراءة كل البيانات وتخزينها في الذاكرة (للاستخدام لاحقاً عند الضغط على زر البدء)
+            foreach (var row in worksheet.RowsUsed().Skip(1))
+            {
+                var journalName = row.Cell(colName).GetString().Trim();
+                if (string.IsNullOrWhiteSpace(journalName)) continue;
+
+                var publisher = colPublisher != -1 ? row.Cell(colPublisher).GetString().Trim() : null;
+                var country = colCountry != -1 ? row.Cell(colCountry).GetString().Trim() : null;
+                var quartileRaw = colQuartile != -1 ? row.Cell(colQuartile).GetString().Trim() : "";
+                var quartile = quartileRaw.Split(' ')[0];
+
+                decimal? impactFactor = null;
+                if (colImpact != -1) { var impactStr = row.Cell(colImpact).GetString().Trim(); if (decimal.TryParse(impactStr, out var parsedIf)) impactFactor = parsedIf; }
+                var websiteUrl = colUrl != -1 ? row.Cell(colUrl).GetString().Trim() : null;
+                var scope = colScope != -1 ? row.Cell(colScope).GetString().Trim() : null;
+
+                allParsedJournals.Add(new JournalData
+                {
+                    Name = journalName,
+                    Publisher = publisher,
+                    Country = country,
+                    Quartile = quartile,
+                    ImpactFactor = impactFactor,
+                    WebsiteUrl = websiteUrl,
+                    Scope = scope
+                });
+            }
+
+            importMessage = $"تم تحميل الملف بنجاح! يحتوي على {totalRowsInFile} مجلة. يرجى تحديد العدد والضغط على 'بدء المزامنة'.";
+        }
+        catch (Exception ex) { importMessage = $"حدث خطأ أثناء قراءة الملف: {ex.Message}"; currentFileName = ""; }
+    }
+
+    private async Task StartImport()
+    {
+        if (!await VerifyAdminBeforeAction()) { importMessage = "غير مصرح لك بهذا الإجراء."; return; }
+
+        if (allParsedJournals.Count == 0) { importMessage = "لا توجد بيانات للاستيراد."; return; }
+
+        isImporting = true;
+        progressPercentage = 0;
+        importMessage = "";
+        importCts = new CancellationTokenSource();
+        var token = importCts.Token;
+
+        try
+        {
+            int rowsToProcess = maxJournalsToImport > 0 ? Math.Min(maxJournalsToImport, allParsedJournals.Count) : allParsedJournals.Count;
+            int processedRows = 0;
+            int count = 0;
+            var journalsToInsert = new List<object>();
+
+            foreach (var journal in allParsedJournals.Take(rowsToProcess))
+            {
+                if (token.IsCancellationRequested) { importMessage = "تم إيقاف العملية بناءً على طلبك."; break; }
+
+                currentJournalName = journal.Name;
+
+                var journalData = new
+                {
+                    name = journal.Name,
+                    publisher = string.IsNullOrWhiteSpace(journal.Publisher) ? null : journal.Publisher,
+                    country = string.IsNullOrWhiteSpace(journal.Country) ? null : journal.Country,
+                    quartile = string.IsNullOrWhiteSpace(journal.Quartile) ? null : journal.Quartile,
+                    impact_factor = journal.ImpactFactor,
+                    website_url = string.IsNullOrWhiteSpace(journal.WebsiteUrl) ? null : journal.WebsiteUrl,
+                    scope = string.IsNullOrWhiteSpace(journal.Scope) ? null : journal.Scope
+                };
+
+                journalsToInsert.Add(journalData);
+                count++; processedRows++;
+
+                if (rowsToProcess > 0) progressPercentage = (int)((processedRows * 100.0) / rowsToProcess);
+
+                if (journalsToInsert.Count >= 100)
+                {
+                    await InsertJournalsBatch(journalsToInsert);
+                    journalsToInsert.Clear();
+                    StateHasChanged();
+                    await Task.Yield();
+                }
+            }
+
+            if (journalsToInsert.Count > 0 && !token.IsCancellationRequested) await InsertJournalsBatch(journalsToInsert);
+            if (!token.IsCancellationRequested) { progressPercentage = 100; importMessage = $"تمت إضافة {count} مجلة بنجاح!"; }
+        }
+        catch (Exception ex) { importMessage = $"حدث خطأ أثناء الاستيراد: {ex.Message}"; }
+        finally { isImporting = false; currentJournalName = ""; }
+    }
+
+    private void ResetImport()
+    {
+        currentFileName = "";
+        previewJournals.Clear();
+        allParsedJournals.Clear();
+        totalRowsInFile = 0;
+        importMessage = "";
+    }
+
+    private void CancelImport() { importCts?.Cancel(); }
+
+    private async Task InsertJournalsBatch(List<object> batch)
+    {
+        var json = JsonSerializer.Serialize(batch);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var req = new HttpRequestMessage(HttpMethod.Post, $"{supabaseUrl}/rest/v1/journals");
+        req.Headers.Add("apikey", supabaseKey);
+        req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
+        req.Headers.Add("Prefer", "return=minimal");
+        req.Content = content;
+        var response = await Http.SendAsync(req);
+        if (!response.IsSuccessStatusCode) { var err = await response.Content.ReadAsStringAsync(); throw new Exception($"فشل إدخال دفعة: {err}"); }
+    }
+
+    // ... باقي الدوال (VerifyAdminBeforeAction, ApproveAdmin, RejectAdmin, ChangeRole, ToggleSuspend, ExtendValidity, SendWhatsAppSuspensionMessage, UpdateUser) تبقى كما هي ...
+    private async Task<bool> VerifyAdminBeforeAction()
+    {
+        try
+        {
+            var userIdStr = await JS.InvokeAsync<string>("localStorage.getItem", "userId");
+            if (string.IsNullOrEmpty(userIdStr) || !long.TryParse(userIdStr, out var userId)) return false;
+
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{supabaseUrl}/rest/v1/users?id=eq.{userId}&select=role,is_approved");
+            request.Headers.Add("apikey", supabaseKey);
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
+            var response = await Http.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode) return false;
+
+            var json = await response.Content.ReadAsStringAsync();
+            var users = JsonSerializer.Deserialize<List<UserData>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            return users != null && users.Count > 0 && (users[0].role == "developer" || users[0].role == "admin") && users[0].is_approved;
+        }
+        catch { return false; }
+    }
+
+    private async Task ApproveAdmin(long id, string currentRole)
+    {
+        if (!await VerifyAdminBeforeAction()) return;
+        var request = new HttpRequestMessage(HttpMethod.Get, $"{supabaseUrl}/rest/v1/users?id=eq.{id}&select=role");
+        request.Headers.Add("apikey", supabaseKey);
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
+        var response = await Http.SendAsync(request);
+
+        var role = currentRole;
+        if (response.IsSuccessStatusCode)
+        {
+            var json = await response.Content.ReadAsStringAsync();
+            var userRole = JsonSerializer.Deserialize<List<UserData>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            if (userRole != null && userRole.Count > 0) role = userRole[0].role;
+        }
+
+        if (role == "admin") await UpdateUser(id, new { is_approved = true, is_rejected = false, is_suspended = false, role = "admin" });
+        else await UpdateUser(id, new { is_approved = true, is_rejected = false, is_suspended = false, role = "researcher" });
+
+        await LoadData();
+    }
+
+    private async Task RejectAdmin(long id)
+    {
+        if (!await VerifyAdminBeforeAction()) return;
+        await UpdateUser(id, new { is_approved = false, is_rejected = true, is_suspended = false });
+        await LoadData();
+    }
+
+    private async Task ChangeRole(long id, string newRole)
+    {
+        if (!await VerifyAdminBeforeAction()) return;
+        await UpdateUser(id, new { role = newRole, is_approved = true, is_rejected = false, is_suspended = false });
+        await LoadData();
+    }
+
+    private async Task ToggleSuspend(long id, bool suspend)
+    {
+        if (!await VerifyAdminBeforeAction()) return;
+        if (suspend)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{supabaseUrl}/rest/v1/users?id=eq.{id}&select=full_name,phone");
+            request.Headers.Add("apikey", supabaseKey);
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
+            var response = await Http.SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                var users = JsonSerializer.Deserialize<List<UserData>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                if (users != null && users.Count > 0)
+                {
+                    var user = users[0];
+                    await SendWhatsAppSuspensionMessage(user.phone, user.full_name);
+                }
+            }
+        }
+        await UpdateUser(id, new { is_suspended = suspend });
+        await LoadData();
+    }
+
+    private async Task ExtendValidity(long id, int months)
+    {
+        if (!await VerifyAdminBeforeAction()) return;
+        DateTime newValidity = DateTime.UtcNow.AddMonths(months);
+        await UpdateUser(id, new { valid_until = newValidity, is_suspended = false });
+        await LoadData();
+    }
+
+    private async Task SendWhatsAppSuspensionMessage(string phoneNumber, string userName)
+    {
+        if (string.IsNullOrWhiteSpace(phoneNumber)) return;
+        string formattedPhone = phoneNumber.Trim().Replace("+", "").Replace(" ", "");
+        if (formattedPhone.StartsWith("0")) { formattedPhone = "964" + formattedPhone.Substring(1); }
+
+        string message = $"مرحباً {userName}،\n\nنود إعلامك بأنه تم تعطيل حسابك في نظام (AI Journal Matcher) مؤقتاً.\nلإعادة تفعيل حسابك ومراجعة الأمر، يرجى التواصل مع مدير النظام:\n\n👤 السيد: قاسم موسى الزريج\n📞 واتساب: 07717212101\n\nنشكر لك تفهمك وتعاونك، ونحن هنا لخدمتك.\nإدارة النظام 🌐";
+        string encodedMessage = Uri.EscapeDataString(message);
+
+        if (string.IsNullOrEmpty(whatsappInstanceId) || string.IsNullOrEmpty(whatsappToken)) return;
+        string url = $"https://api.ultramsg.com/{whatsappInstanceId}/messages/chat?token={whatsappToken}&to={formattedPhone}&body={encodedMessage}";
+        try { await Http.GetAsync(url); } catch { }
+    }
+
+    private async Task UpdateUser(long id, object payload)
+    {
+        var json = JsonSerializer.Serialize(payload);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var request = new HttpRequestMessage(HttpMethod.Patch, $"{supabaseUrl}/rest/v1/users?id=eq.{id}");
+        request.Headers.Add("apikey", supabaseKey);
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
+        request.Content = content;
+        await Http.SendAsync(request);
+    }
+
+    // كلاسات مساعدة
+    public class SettingData { public long id { get; set; } public string key { get; set; } = ""; public string value { get; set; } = ""; }
+    public class UserData
+    {
+        public long id { get; set; }
+        public string full_name { get; set; } = "";
+        public string email { get; set; } = "";
+        public string phone { get; set; } = "";
+        public string role { get; set; } = "researcher";
+        public string university { get; set; } = "";
+        public bool is_approved { get; set; }
+        public bool is_rejected { get; set; }
+        public bool is_suspended { get; set; }
+        public DateTime? valid_until { get; set; }
+    }
+    public class PreviewJournal { public string Name { get; set; } = ""; public string Publisher { get; set; } = ""; public string Quartile { get; set; } = ""; }
+    public class JournalData { public string Name { get; set; } = ""; public string Publisher { get; set; } = ""; public string Country { get; set; } = ""; public string Quartile { get; set; } = ""; public decimal? ImpactFactor { get; set; } public string WebsiteUrl { get; set; } = ""; public string Scope { get; set; } = ""; }
+}

@@ -18,248 +18,22 @@ body {
 }
 
 /* =========================================
-   الشريط الجانبي (Sidebar)
+   إجبار الحاويات على أخذ كامل العرض 
    ========================================= */
-.sidebar {
-    width: 260px;
-    background: linear-gradient(180deg, #1E293B 0%, #0F172A 100%);
-    color: white;
-    height: 100vh;
-    position: fixed;
-    right: 0;
-    top: 0;
-    display: flex;
-    flex-direction: column;
-    box-shadow: -4px 0 15px rgba(0,0,0,0.1);
-    z-index: 1000;
+.container, .container-fluid, .container-lg, .container-md, .container-sm, .container-xl {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding-right: 15px;
+    padding-left: 15px;
+    margin-right: auto;
+    margin-left: auto;
 }
 
-.sidebar-header {
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    border-bottom: 1px solid #334155;
+.main-content > * {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
 }
-
-.sidebar-logo-icon {
-    background: var(--accent);
-    width: 42px;
-    height: 42px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    margin-left: 12px;
-}
-
-.sidebar-nav {
-    padding: 10px;
-    flex-grow: 1;
-    overflow-y: auto;
-}
-
-.nav-item {
-    display: flex;
-    align-items: center;
-    padding: 12px 18px;
-    color: #CBD5E1;
-    text-decoration: none;
-    border-radius: 10px;
-    margin-bottom: 4px;
-    transition: 0.3s;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-}
-
-    .nav-item:hover, .nav-item.active {
-        background-color: var(--sidebar-hover);
-        color: white;
-    }
-
-    .nav-item i {
-        font-size: 18px;
-        margin-left: 12px;
-        width: 24px;
-        text-align: center;
-    }
-
-.sidebar-footer {
-    padding: 20px;
-    border-top: 1px solid #334155;
-}
-
-.user-profile {
-    background: #334155;
-    border-radius: 10px;
-    padding: 12px;
-    display: flex;
-    align-items: center;
-    margin-bottom: 15px;
-}
-
-.user-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: var(--accent);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    margin-left: 10px;
-}
-
-.btn-logout {
-    background: #DC2626;
-    color: white;
-    border: none;
-    width: 100%;
-    padding: 12px;
-    border-radius: 10px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: 0.3s;
-}
-
-    .btn-logout:hover {
-        background: #B91C1C;
-    }
-
-/* =========================================
-   المحتوى الرئيسي (Main Content)
-   ========================================= */
-.main-content {
-    margin-right: 260px;
-    padding: 30px;
-    min-height: 100vh;
-}
-
-/* =========================================
-   الشريط العلوي (Top Navbar) - صف واحد أنيق
-   ========================================= */
-.home-top-navbar {
-    background: #FFFFFF;
-    border: 1px solid #E2E8F0;
-    border-radius: 16px;
-    padding: 16px 24px;
-    margin-bottom: 30px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap; /* لضمان الترتيب على الشاشات الصغيرة */
-    gap: 16px;
-}
-
-.welcome-section {
-    display: flex;
-    flex-direction: column;
-}
-
-.welcome-title {
-    font-size: 20px;
-    font-weight: 800;
-    color: #1E293B;
-    margin: 0;
-}
-
-.welcome-subtitle {
-    font-size: 13px;
-    color: #64748B;
-    margin-top: 4px;
-}
-
-.navbar-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-/* بطاقة المستخدم */
-.user-info-navbar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: #F8FAFC;
-    padding: 6px 14px;
-    border-radius: 10px;
-    border: 1px solid #E2E8F0;
-}
-
-.user-avatar-nav {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    background: linear-gradient(135deg, #6366F1, #8B5CF6);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 14px;
-}
-
-.user-name-nav {
-    font-size: 13px;
-    font-weight: 700;
-    color: #1E293B;
-}
-
-/* بطاقة الوقت */
-.date-time-box {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: #F8FAFC;
-    padding: 8px 14px;
-    border-radius: 10px;
-    border: 1px solid #E2E8F0;
-}
-
-.date-text {
-    font-size: 13px;
-    color: #475569;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.time-text {
-    font-size: 14px;
-    color: #6366F1;
-    font-weight: 800;
-    font-family: monospace;
-}
-
-/* زر التحديث */
-.btn-refresh {
-    background: #6366F1;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 10px;
-    font-weight: 700;
-    font-size: 13px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-    transition: 0.2s;
-    height: 42px;
-}
-
-    .btn-refresh:hover {
-        background: #4F46E5;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-    }
 
 /* =========================================
    الكروت (Cards)
@@ -290,7 +64,7 @@ body {
 }
 
 /* =========================================
-   الجدول (Table)
+   الجداول
    ========================================= */
 .table-custom {
     width: 100%;

@@ -1,0 +1,434 @@
+﻿@page "/conferences"
+@using System.Text.Json
+@inject HttpClient Http
+
+<PageTitle>المؤتمرات العلمية القادمة</PageTitle>
+
+<style>
+    .conf-page {
+        background: #F8FAFC;
+        min-height: 100vh;
+        padding: 30px;
+        direction: rtl;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+        .page-header h1 {
+            font-weight: 800;
+            color: #1E293B;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .page-header p {
+            color: #64748B;
+            font-size: 16px;
+        }
+
+    .filter-section {
+        background: white;
+        border-radius: 16px;
+        padding: 20px 25px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        border: 1px solid #E2E8F0;
+        margin-bottom: 30px;
+    }
+
+    .filter-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+        .filter-row:last-child {
+            margin-bottom: 0;
+        }
+
+    .search-box {
+        position: relative;
+        flex: 1;
+        min-width: 250px;
+    }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px 10px 40px;
+            border: 1px solid #CBD5E1;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 12px;
+            top: 12px;
+            color: #94A3B8;
+        }
+
+    .category-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .cat-tag {
+        padding: 6px 16px;
+        border-radius: 20px;
+        border: 1px solid #E2E8F0;
+        background: white;
+        color: #475569;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+        .cat-tag:hover, .cat-tag.active {
+            background: #6366F1;
+            color: white;
+            border-color: #6366F1;
+        }
+
+    .confs-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 25px;
+    }
+
+    .conf-card {
+        background: white;
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        border: 1px solid #F1F5F9;
+        display: flex;
+        flex-direction: column;
+        transition: all 0.3s ease;
+    }
+
+        .conf-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+    .card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .category-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+        background: #E0E7FF;
+        color: #4338CA;
+    }
+
+    .status-badge {
+        font-size: 11px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .conf-title {
+        font-size: 17px;
+        font-weight: 800;
+        color: #1E293B;
+        margin-bottom: 15px;
+        line-height: 1.4;
+    }
+
+    .conf-details {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-grow: 1;
+    }
+
+    .detail-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        color: #475569;
+    }
+
+        .detail-item i {
+            font-size: 16px;
+            width: 20px;
+            text-align: center;
+        }
+
+    .conf-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        background: #6366F1;
+        color: white;
+        font-weight: 700;
+        font-size: 13px;
+        text-decoration: none;
+        transition: background 0.2s;
+    }
+
+        .conf-link:hover {
+            background: #4F46E5;
+        }
+
+    .loading-state, .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: white;
+        border-radius: 16px;
+        border: 1px dashed #E2E8F0;
+    }
+
+        .loading-state i, .empty-state i {
+            font-size: 50px;
+            color: #CBD5E1;
+            margin-bottom: 15px;
+            display: block;
+        }
+</style>
+
+<div class="conf-page">
+    <div class="page-header">
+        <h1>📅 المؤتمرات العلمية القادمة</h1>
+        <p>تابع المؤتمرات في جميع التخصصات العلمية، وخطط لمشاركتك القادمة.</p>
+    </div>
+
+    <div class="filter-section">
+        <div class="filter-row">
+            <div class="search-box">
+                <i class="bi bi-search"></i>
+                <input type="text" placeholder="ابحث عن مؤتمر بالاسم..." @bind="searchTerm" @bind:event="oninput" />
+            </div>
+            <button class="cat-tag @(selectedField == "all" ? "active" : "")" @onclick='() => SelectField("all")'>الكل</button>
+        </div>
+        <div class="category-tags">
+            @foreach (var field in researchFields)
+            {
+                <button class="cat-tag @(selectedField == field.Key ? "active" : "")" @onclick='() => SelectField(field.Key)'>@field.Value</button>
+            }
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="loading-state">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
+            <p style="margin-top: 15px; color: #64748B; font-weight: bold;">جاري جلب المؤتمرات...</p>
+        </div>
+    }
+    else if (!filteredConferences.Any())
+    {
+        <div class="empty-state">
+            <i class="bi bi-calendar-x"></i>
+            <h5 style="color: #1E293B; font-weight: 700;">لا توجد مؤتمرات قادمة حالياً</h5>
+            <p style="color: #64748B;">لم نتمكن من العثور على مؤتمرات تطابق بحثك. يرجى المحاولة لاحقاً أو تغيير التصنيف.</p>
+        </div>
+    }
+    else
+    {
+        <div class="confs-grid">
+            @foreach (var conf in filteredConferences)
+            {
+                <div class="conf-card">
+                    <div class="card-top">
+                        <span class="category-badge">@conf.FieldName</span>
+                        @if (conf.IsSubmissionOpen)
+                        {
+                            <span class="status-badge" style="color: #10B981;"><i class="bi bi-broadcast"></i> التقديم مفتوح</span>
+                        }
+                        else
+                        {
+                            <span class="status-badge" style="color: #EF4444;"><i class="bi bi-x-circle"></i> مغلق</span>
+                        }
+                    </div>
+                    <h5 class="conf-title">@conf.Title</h5>
+                    <div class="conf-details">
+                        <div class="detail-item">
+                            <i class="bi bi-geo-alt-fill text-danger"></i>
+                            <span>@(string.IsNullOrEmpty(conf.Location) ? "غير محدد" : conf.Location)</span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="bi bi-calendar3 text-primary"></i>
+                            <span>@conf.Date</span>
+                        </div>
+                        @if (!string.IsNullOrEmpty(conf.SubmissionDeadline))
+                        {
+                            <div class="detail-item">
+                                <i class="bi bi-clock-history text-warning"></i>
+                                <span>آخر موعد للتقديم: @conf.SubmissionDeadline</span>
+                            </div>
+                        }
+                    </div>
+                    <a href="@conf.Url" target="_blank" class="conf-link">
+                        تفاصيل المؤتمر <i class="bi bi-box-arrow-up-left"></i>
+                    </a>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private string searchTerm = "";
+    private string selectedField = "all";
+    private bool isLoading = true;
+    private List<Conference> conferences = new();
+    private List<Conference> filteredConferences = new();
+
+    // قائمة التصنيفات العلمية (مأخوذة من الـ API)
+    private Dictionary<string, string> researchFields = new()
+    {
+        { "ai", "الذكاء الاصطناعي" },
+        { "cs", "علوم الحاسوب" },
+        { "engineering", "الهندسة" },
+        { "medicine", "الطب" },
+        { "biology", "الأحياء" },
+        { "chemistry", "الكيمياء" },
+        { "physics", "الفيزياء" },
+        { "mathematics", "الرياضيات" },
+        { "environment", "البيئة" },
+        { "agriculture", "الزراعة" },
+        { "economics", "الاقتصاد" },
+        { "law", "القانون" },
+        { "education", "التعليم" },
+        { "social", "العلوم الاجتماعية" },
+        { "humanities", "الإنسانيات" },
+        { "psychology", "علم النفس" },
+        { "business", "إدارة الأعمال" },
+        { "materials", "علوم المواد" },
+        { "energy", "الطاقة" },
+        { "neuroscience", "علوم الأعصاب" },
+        { "pharmacy", "الصيدلة" }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadConferences();
+    }
+
+    private async Task SelectField(string field)
+    {
+        selectedField = field;
+        await LoadConferences();
+    }
+
+    private async Task LoadConferences()
+    {
+        isLoading = true;
+        try
+        {
+            // استخدام Conference Partner API (مجاني، يرجع مؤتمرات أكاديمية حقيقية)
+            string url = "https://www.myhuiban.com/api/conferences?";
+
+            // فلترة حسب المجال (إذا مو "الكل")
+            if (selectedField != "all")
+            {
+                url += $"field={selectedField}&";
+            }
+
+            // جلب المؤتمرات القادمة فقط (تاريخ المؤتمر بعد اليوم)
+            url += $"conference_date_start={DateTime.Now:yyyy-MM-dd}&per_page=100";
+
+            var response = await Http.GetAsync(url);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                var data = JsonSerializer.Deserialize<HuibanResponse>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (data != null && data.Data != null)
+                {
+                    conferences = data.Data
+                        .Where(c => c.ConferenceDate != null && c.ConferenceDate > DateTime.Now)
+                        .Select(c => new Conference
+                        {
+                            Title = c.Title ?? "بدون عنوان",
+                            Location = c.Location ?? "",
+                            Date = c.ConferenceDate?.ToString("dd MMMM yyyy", new System.Globalization.CultureInfo("ar-EG")) ?? "غير محدد",
+                            SubmissionDeadline = c.SubmissionDeadline?.ToString("dd MMMM yyyy", new System.Globalization.CultureInfo("ar-EG")) ?? "",
+                            Field = c.Field ?? "other",
+                            FieldName = GetFieldName(c.Field),
+                            Url = c.Link ?? "#",
+                            IsSubmissionOpen = c.SubmissionDeadline.HasValue && c.SubmissionDeadline.Value > DateTime.Now
+                        })
+                        .OrderBy(c => c.Date)
+                        .ToList();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading conferences: {ex.Message}");
+            // في حال فشل الـ API، نعرض رسالة فارغة
+            conferences = new();
+        }
+        finally
+        {
+            isLoading = false;
+            ApplyFilter();
+        }
+    }
+
+    private void ApplyFilter()
+    {
+        filteredConferences = conferences.Where(c =>
+            string.IsNullOrWhiteSpace(searchTerm) ||
+            c.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+        ).ToList();
+    }
+
+    private string GetFieldName(string? field)
+    {
+        if (string.IsNullOrEmpty(field)) return "عام";
+        return researchFields.ContainsKey(field.ToLower()) ? researchFields[field.ToLower()] : "عام";
+    }
+
+    // كلاسات لتمثيل البيانات
+    public class Conference
+    {
+        public string Title { get; set; } = "";
+        public string Location { get; set; } = "";
+        public string Date { get; set; } = "";
+        public string SubmissionDeadline { get; set; } = "";
+        public string Field { get; set; } = "";
+        public string FieldName { get; set; } = "";
+        public string Url { get; set; } = "";
+        public bool IsSubmissionOpen { get; set; }
+    }
+
+    public class HuibanResponse
+    {
+        public List<HuibanConference> Data { get; set; } = new();
+    }
+
+    public class HuibanConference
+    {
+        public string? Title { get; set; }
+        public string? Location { get; set; }
+        public DateTime? ConferenceDate { get; set; }
+        public DateTime? SubmissionDeadline { get; set; }
+        public string? Field { get; set; }
+        public string? Link { get; set; }
+    }
+}

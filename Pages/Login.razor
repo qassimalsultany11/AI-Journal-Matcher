@@ -200,7 +200,6 @@
         gap: 8px;
     }
 
-    /* تنسيق رابط إنشاء الحساب الجديد */
     .register-link-container {
         text-align: center;
         margin-top: 20px;
@@ -224,9 +223,7 @@
 <div class="login-page-wrapper">
     <div class="login-card">
         <div class="login-header">
-            <div class="login-header-icon">
-                <i class="bi bi-person"></i>
-            </div>
+            <div class="login-header-icon"><i class="bi bi-person"></i></div>
             <h2>مرحباً بعودتك</h2>
             <p>تسجيل الدخول إلى AI Journal Matcher</p>
         </div>
@@ -276,7 +273,6 @@
                 }
             </button>
 
-            <!-- ربط صفحة تسجيل الدخول بصفحة إنشاء الحساب -->
             <div class="register-link-container">
                 ليس لديك حساب؟ <a href="/register" class="register-link">إنشاء حساب جديد</a>
             </div>
@@ -312,7 +308,7 @@
 
         try
         {
-            // 1. البحث عن المستخدم في جدول public.users (بواسطة البريد الإلكتروني أو اسم المستخدم)
+            // 1. البحث عن المستخدم
             var request = new HttpRequestMessage(HttpMethod.Get, $"{supabaseUrl}/rest/v1/users?or=(email.eq.{Uri.EscapeDataString(email)},username.eq.{Uri.EscapeDataString(email)})&select=*");
             request.Headers.Add("apikey", supabaseKey);
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
@@ -328,25 +324,63 @@
                 {
                     var user = users[0];
 
-                    // 2. التحقق من كلمة المرور (نستخدم SHA256 لكي تتطابق مع صفحة التسجيل)
+                    // 2. التحقق من كلمة المرور أولاً (حماية أمنية)
                     bool isPasswordValid = VerifyPassword(password, user.password_hash);
 
                     if (isPasswordValid)
                     {
-                        // حفظ بيانات المستخدم في الـ LocalStorage
+                        // 3. التحقق من الإيقاف (إذا كان الحساب موقوف يدوياً)
+                        if (user.is_suspended)
+                        {
+                            errorMessage = "عذراً، تم إيقاف حسابك من قبل إدارة النظام. يرجى التواصل مع الدعم.";
+                            isLoading = false;
+                            return;
+                        }
+
+                        // 4. التحقق من حالة الموافقة
+                        if (user.role == "admin" && user.is_approved == false)
+                        {
+                            errorMessage = "حسابك كمدير نظام قيد المراجعة من قبل الإدارة. يرجى الانتظار حتى يتم تفعيل حسابك.";
+                            isLoading = false;
+                            return;
+                        }
+
+                        if (user.is_approved == false && user.role != "admin")
+                        {
+                            errorMessage = "حسابك موقوف حالياً. يرجى التواصل مع إدارة النظام.";
+                            isLoading = false;
+                            return;
+                        }
+
+                        // 5. التحقق من تاريخ انتهاء الصلاحية (valid_until) - التحديث الجديد
+                        if (user.valid_until.HasValue && user.valid_until.Value.ToUniversalTime() < DateTime.UtcNow)
+                        {
+                            // إذا انتهت الصلاحية، نوقف الحساب تلقائياً
+                            await UpdateUserStatus(user.id, false);
+                            errorMessage = "عذراً، انتهت صلاحية حسابك. يرجى التواصل مع الإدارة لتمديد الصلاحية.";
+                            isLoading = false;
+                            return;
+                        }
+
+                        // ملاحظة: تم إلغاء شرط "آخر دخول 60 يوم" لأننا نعتمد الآن على valid_until
+
+                        // 6. تحديث تاريخ آخر دخول (last_login)
+                        await UpdateLastLogin(user.id);
+
+                        // 7. حفظ البيانات في LocalStorage
                         await JS.InvokeVoidAsync("localStorage.setItem", "authToken", "logged_in");
                         await JS.InvokeVoidAsync("localStorage.setItem", "username", user.username);
                         await JS.InvokeVoidAsync("localStorage.setItem", "userRole", user.role ?? "researcher");
                         await JS.InvokeVoidAsync("localStorage.setItem", "userId", user.id.ToString());
                         await JS.InvokeVoidAsync("localStorage.setItem", "fullName", user.full_name ?? user.username);
 
-                        // إبلاغ النظام بأن المستخدم سجل دخوله
+                        // 8. إبلاغ النظام
                         if (AuthProvider is CustomAuthenticationStateProvider customProvider)
                         {
                             customProvider.MarkUserAsAuthenticated(user.email);
                         }
 
-                        // تحويله للوحة التحكم
+                        // 9. تحويله للوحة التحكم
                         Nav.NavigateTo("/");
                     }
                     else
@@ -374,7 +408,33 @@
         }
     }
 
-    // دالة للتحقق من كلمة المرور (متطابقة مع صفحة التسجيل SHA256)
+    // دالة لتحديث تاريخ آخر دخول
+    private async Task UpdateLastLogin(long userId)
+    {
+        var payload = new { last_login = DateTime.UtcNow };
+        var json = JsonSerializer.Serialize(payload);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var request = new HttpRequestMessage(HttpMethod.Patch, $"{supabaseUrl}/rest/v1/users?id=eq.{userId}");
+        request.Headers.Add("apikey", supabaseKey);
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
+        request.Content = content;
+        await Http.SendAsync(request);
+    }
+
+    // دالة لتحديث حالة المستخدم (تفعيل/تعطيل)
+    private async Task UpdateUserStatus(long userId, bool isApproved)
+    {
+        var payload = new { is_approved = isApproved };
+        var json = JsonSerializer.Serialize(payload);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var request = new HttpRequestMessage(HttpMethod.Patch, $"{supabaseUrl}/rest/v1/users?id=eq.{userId}");
+        request.Headers.Add("apikey", supabaseKey);
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
+        request.Content = content;
+        await Http.SendAsync(request);
+    }
+
+    // دالة للتحقق من كلمة المرور
     private bool VerifyPassword(string enteredPassword, string storedHash)
     {
         using (var sha256 = SHA256.Create())
@@ -393,5 +453,9 @@
         public string password_hash { get; set; } = "";
         public string full_name { get; set; } = "";
         public string role { get; set; } = "researcher";
+        public bool is_approved { get; set; }
+        public bool is_suspended { get; set; }
+        public DateTime? last_login { get; set; }
+        public DateTime? valid_until { get; set; } // <--- الحقل الجديد
     }
 }
