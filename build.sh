@@ -1,12 +1,7 @@
-#!/bin/sh
-# تثبيت .NET 10
-curl -sSL https://dot.net/v1/dotnet-install.sh > dotnet-install.sh
-chmod +x dotnet-install.sh
-./dotnet-install.sh -c 10.0 -InstallDir ./dotnet
 
-# بناء المشروع
-./dotnet/dotnet publish -c Release -o output
+#!/usr/bin/env bash
+curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 8.0
+export DOTNET_ROOT=$HOME/.dotnet
+export PATH=$PATH:$DOTNET_ROOT
 
-# طباعة محتويات مجلد الإخراج (للتأكد من وجود الملفات)
-echo "--- محتويات مجلد output ---"
-ls -R output
+dotnet publish -c Release -o output
