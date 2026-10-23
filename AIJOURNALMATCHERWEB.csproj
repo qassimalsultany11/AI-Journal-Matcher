@@ -7,6 +7,9 @@
 
     <WasmInlineBootConfig>false</WasmInlineBootConfig>
     <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
+
+    <BlazorEnableCompression>false</BlazorEnableCompression>
+    <PublishBrotliCompress>false</PublishBrotliCompress>
   </PropertyGroup>
 
   <ItemGroup>
