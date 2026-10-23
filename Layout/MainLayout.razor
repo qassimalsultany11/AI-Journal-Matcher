@@ -302,11 +302,10 @@
         color: #1E293B;
         position: relative;
         width: 100%;
-        padding: 25px; /* مسافة مريحة للعين */
+        padding: 25px;
         box-sizing: border-box;
     }
 
-        /* هذا السطر يجبر أي صفحة تنحط داخل المحتوى تتمدد 100% */
         .main-content > * {
             width: 100%;
             max-width: 100%;
@@ -352,8 +351,8 @@
             <NavLink class="nav-item" href="/manage-researchers">
                 <i class="bi bi-people-fill"></i> <span class="nav-text">إدارة الباحثين</span>
             </NavLink>
-            <NavLink class="nav-item" href="/settings">
-                <i class="bi bi-gear-fill"></i> <span class="nav-text">الإعدادات</span>
+            <NavLink class="nav-item" href="ResearcherTools">
+                <i class="bi bi-tools"></i> <span class="nav-text">أدوات الباحث</span>
             </NavLink>
             <NavLink class="nav-item" href="/scientific-sites">
                 <i class="bi bi-globe2"></i> <span class="nav-text">المواقع العلمية</span>
@@ -381,15 +380,16 @@
                 </div>
             }
 
+            <!-- الجزء الديناميكي لبيانات المستخدم -->
             <button class="user-profile-btn" @onclick="ToggleAdminMenu">
                 <div class="user-info-group">
                     <div class="user-avatar">
-                        Q
+                        @userInitial
                         <div class="admin-badge"></div>
                     </div>
                     <div class="user-details user-details-text">
-                        <span class="user-name">قاسم موسى</span>
-                        <span class="user-role"><i class="bi bi-shield-check"></i> مدير النظام</span>
+                        <span class="user-name">@currentUserName</span>
+                        <span class="user-role"><i class="bi bi-shield-check"></i> @currentUserRole</span>
                     </div>
                 </div>
                 <i class="bi @(showAdminMenu ? "bi-chevron-down" : "bi-chevron-up") user-details-text" style="color: #94A3B8; font-size: 12px;"></i>
@@ -407,6 +407,43 @@
     private bool showAdminMenu = false;
     private bool isCollapsed = false;
 
+    // --- متغيرات بيانات المستخدم الديناميكية ---
+    private string currentUserName = "زائر";
+    private string currentUserRole = "باحث";
+    private string userInitial = "U";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // قراءة الاسم والصلاحية من localStorage (التي تم حفظها في Login.razor)
+            var storedName = await JS.InvokeAsync<string>("localStorage.getItem", "fullName");
+            var storedRole = await JS.InvokeAsync<string>("localStorage.getItem", "userRole");
+
+            if (!string.IsNullOrEmpty(storedName))
+            {
+                currentUserName = storedName;
+                currentUserRole = string.IsNullOrEmpty(storedRole) ? "باحث" : storedRole;
+                userInitial = currentUserName.Substring(0, 1).ToUpper();
+            }
+            else
+            {
+                // إذا لم يوجد في localStorage، نتحقق من المصادقة
+                var authState = await AuthProvider.GetAuthenticationStateAsync();
+                if (authState.User.Identity != null && authState.User.Identity.IsAuthenticated)
+                {
+                    currentUserName = authState.User.Identity.Name ?? "مستخدم";
+                    currentUserRole = "باحث";
+                    userInitial = currentUserName.Substring(0, 1).ToUpper();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error reading user data: {ex.Message}");
+        }
+    }
+
     private void ToggleAdminMenu()
     {
         showAdminMenu = !showAdminMenu;
@@ -420,7 +457,13 @@
 
     private async Task Logout()
     {
+        // مسح جميع البيانات عند تسجيل الخروج
         await JS.InvokeVoidAsync("localStorage.removeItem", "authToken");
+        await JS.InvokeVoidAsync("localStorage.removeItem", "username");
+        await JS.InvokeVoidAsync("localStorage.removeItem", "userRole");
+        await JS.InvokeVoidAsync("localStorage.removeItem", "userId");
+        await JS.InvokeVoidAsync("localStorage.removeItem", "fullName");
+
         if (AuthProvider is AIJOURNALMATCHERWEB.Services.CustomAuthenticationStateProvider customProvider)
         {
             customProvider.MarkUserAsLoggedOut();
