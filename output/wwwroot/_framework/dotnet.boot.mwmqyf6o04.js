@@ -1,7 +1,7 @@
 export const config = /*json-start*/{
   "mainAssemblyName": "AIJOURNALMATCHERWEB",
   "resources": {
-    "hash": "sha256-yMrbCchrfjuYtiADA9cHwmEDLHlfW67mQ8ZX4gYpRxs=",
+    "hash": "sha256-uzBVkoV5/rwdXbDVekkXpcaPuVJ63nnxVyl9LPa1Ghw=",
     "jsModuleNative": [
       {
         "name": "dotnet.native.q38003gvqi.js"
@@ -698,8 +698,8 @@ export const config = /*json-start*/{
       },
       {
         "virtualPath": "AIJOURNALMATCHERWEB.wasm",
-        "name": "AIJOURNALMATCHERWEB.8c9ygb0u0w.wasm",
-        "hash": "sha256-yP+Cd9jdIQJuGj/cE5Sxm5bChJTiB339FKo+7VlhZDA=",
+        "name": "AIJOURNALMATCHERWEB.gc105mzmkb.wasm",
+        "hash": "sha256-0PMiAqgvao1d5xs0+5bwGjgCqVji9OGcN/aCiqmqFLs=",
         "cache": "force-cache"
       }
     ]
