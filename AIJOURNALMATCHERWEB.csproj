@@ -22,4 +22,9 @@
     <PackageReference Include="Supabase" Version="8.3.1" />
   </ItemGroup>
 
+ 
+  <ItemGroup>
+    <Folder Include="wwwroot\sample-data\" />
+  </ItemGroup>
+
 </Project>
