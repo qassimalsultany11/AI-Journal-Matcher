@@ -11,19 +11,27 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
     <div id="app">
-        <div style="text-align:center; margin-top: 50px; font-family: 'Cairo', sans-serif;">جاري التحميل...</div>
+        <div style="text-align:center; margin-top: 50px; font-family: 'Cairo', sans-serif;">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2">جاري التحميل...</p>
+        </div>
     </div>
 
-    <!-- سطر مهم جداً لتشغيل Blazor -->
-    <script src="_framework/blazor.webassembly.js"></script>
+    <div id="blazor-error-ui" style="display:none;">
+        حدث خطأ أثناء تحميل التطبيق.
+        <a href="" class="reload">إعادة تحميل</a>
+    </div>
 
-    <!-- مكتبة Chart.js (مرة واحدة فقط) -->
+    <!-- 1. مكتبة Chart.js أولاً -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- استدعاء ملف الجافاسكربت الخاص بنا -->
+    <!-- 2. ملف الجافاسكربت الخاص بالرسوم البيانية -->
     <script src="Charts.js"></script>
+
+    <!-- 3. تشغيل Blazor في النهاية -->
+    <script src="_framework/blazor.webassembly.js"></script>
 </body>
 </html>
-

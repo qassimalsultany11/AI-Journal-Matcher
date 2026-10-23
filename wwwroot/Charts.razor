@@ -1,9 +1,16 @@
-﻿window.renderCharts = function (quartileData, pubNames, pubCounts) {
-// --- رسم توزيع الأرباع (Doughnut Chart) ---
+﻿// تخزين المخططات عالمياً للتمكن من تدميرها بأمان عند إعادة الرسم
+window.myCharts = window.myCharts || {};
+
+window.renderCharts = function (quartileData, pubNames, pubCounts) {
+// --- 1. رسم توزيع الأرباع (Doughnut Chart) ---
 var ctx1 = document.getElementById('quartileChart');
-if (ctx1 && ctx1.chart) { ctx1.chart.destroy(); }
 if (ctx1) {
-ctx1.chart = new Chart(ctx1, {
+// تدمير المخطط القديم إذا كان موجوداً لمنع تداخل الرسوم
+if (window.myCharts['quartileChart']) {
+window.myCharts['quartileChart'].destroy();
+}
+
+window.myCharts['quartileChart'] = new Chart(ctx1, {
 type: 'doughnut',
 data: {
 labels: ['Q1', 'Q2', 'Q3', 'Q4'],
@@ -18,18 +25,25 @@ options: {
 responsive: true,
 maintainAspectRatio: false,
 plugins: {
-legend: { position: 'bottom', labels: { font: { family: 'Segoe UI', size: 13, weight: 'bold' } } }
+legend: {
+position: 'bottom',
+labels: { font: { family: 'Segoe UI, Cairo, sans-serif', size: 13, weight: 'bold' } }
+}
 },
 cutout: '70%'
 }
 });
 }
 
-// --- رسم الناشرين (Bar Chart) ---
+// --- 2. رسم الناشرين (Bar Chart) ---
 var ctx2 = document.getElementById('publishersChart');
-if (ctx2 && ctx2.chart) { ctx2.chart.destroy(); }
 if (ctx2) {
-ctx2.chart = new Chart(ctx2, {
+// تدمير المخطط القديم إذا كان موجوداً
+if (window.myCharts['publishersChart']) {
+window.myCharts['publishersChart'].destroy();
+}
+
+window.myCharts['publishersChart'] = new Chart(ctx2, {
 type: 'bar',
 data: {
 labels: pubNames,
@@ -47,7 +61,7 @@ maintainAspectRatio: false,
 plugins: { legend: { display: false } },
 scales: {
 y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { display: false } },
-x: { grid: { display: false }, ticks: { font: { family: 'Segoe UI', size: 11 } } }
+x: { grid: { display: false }, ticks: { font: { family: 'Segoe UI, Cairo, sans-serif', size: 11 } } }
 }
 }
 });
@@ -57,7 +71,12 @@ x: { grid: { display: false }, ticks: { font: { family: 'Segoe UI', size: 11 } }
 window.renderPieChart = (canvasId, q1, q2, q3, q4) => {
 const ctx = document.getElementById(canvasId);
 if (!ctx) return;
-new Chart(ctx, {
+
+if (window.myCharts[canvasId]) {
+window.myCharts[canvasId].destroy();
+}
+
+window.myCharts[canvasId] = new Chart(ctx, {
 type: 'doughnut',
 data: {
 labels: ['Q1', 'Q2', 'Q3', 'Q4'],
@@ -70,7 +89,7 @@ borderWidth: 0
 options: {
 responsive: true,
 plugins: {
-legend: { position: 'bottom', labels: { font: { family: 'Cairo' } } }
+legend: { position: 'bottom', labels: { font: { family: 'Cairo, sans-serif' } } }
 }
 }
 });
@@ -79,7 +98,12 @@ legend: { position: 'bottom', labels: { font: { family: 'Cairo' } } }
 window.renderBarChart = (canvasId, labels, data) => {
 const ctx = document.getElementById(canvasId);
 if (!ctx) return;
-new Chart(ctx, {
+
+if (window.myCharts[canvasId]) {
+window.myCharts[canvasId].destroy();
+}
+
+window.myCharts[canvasId] = new Chart(ctx, {
 type: 'bar',
 data: {
 labels: labels,
