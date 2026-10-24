@@ -323,7 +323,7 @@
 </style>
 
 <div class="app-wrapper">
-    <!-- القائمة الجانبية -->
+    @* ===== القائمة الجانبية ===== *@
     <div class="sidebar @(isCollapsed ? "collapsed" : "")">
         <div class="sidebar-header">
             <div class="sidebar-header-left">
@@ -351,7 +351,7 @@
             <NavLink class="nav-item" href="/manage-researchers">
                 <i class="bi bi-people-fill"></i> <span class="nav-text">إدارة الباحثين</span>
             </NavLink>
-            <NavLink class="nav-item" href="ResearcherTools">
+            <NavLink class="nav-item" href="/ResearcherTools">
                 <i class="bi bi-tools"></i> <span class="nav-text">أدوات الباحث</span>
             </NavLink>
             <NavLink class="nav-item" href="/scientific-sites">
@@ -380,7 +380,7 @@
                 </div>
             }
 
-            <!-- الجزء الديناميكي لبيانات المستخدم -->
+            @* ===== الجزء الديناميكي لبيانات المستخدم ===== *@
             <button class="user-profile-btn" @onclick="ToggleAdminMenu">
                 <div class="user-info-group">
                     <div class="user-avatar">
@@ -397,7 +397,7 @@
         </div>
     </div>
 
-    <!-- المحتوى الرئيسي -->
+    @* ===== المحتوى الرئيسي ===== *@
     <div class="main-content">
         @Body
     </div>

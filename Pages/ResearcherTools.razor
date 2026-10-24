@@ -1,142 +1,217 @@
 ﻿@page "/ResearcherTools"
 @using System.Linq
+@using System.Text.Json
 @inject IJSRuntime JS
 
 <div class="container-fluid mt-4" dir="rtl">
     <div class="row">
         <div class="col-12">
-            <!-- الترويسة الرئيسية -->
+
+            <!-- الترويسة -->
             <div class="text-center mb-4">
                 <h2 class="fw-bold text-primary animate__animated animate__fadeInDown">
-                    <i class="bi bi-mortarboard-fill"></i> البوابة الذكية لدعم الباحث الأكاديمي
+                    <i class="bi bi-mortarboard-fill"></i> مختبر الباحث الأكاديمي
                 </h2>
-                <p class="text-muted">منصة متكاملة لإدارة الأبحاث، تقييم المجلات العلمية المحكمة، وتخطيط مسارك الأكاديمي بكفاءة عالية.</p>
+                <p class="text-muted">أدوات فعلية تُحفظ تلقائياً في متصفحك — بدون تسجيل، بدون سيرفر.</p>
             </div>
 
-            <!-- شريط التنقل بين الأدوات -->
+            <!-- التبويبات -->
             <ul class="nav nav-pills nav-fill mb-4 bg-light p-2 rounded-pill shadow-sm flex-nowrap overflow-auto">
                 <li class="nav-item"><button class="nav-link w-100 @(activeTab == "home" ? "active" : "")" @onclick='() => SwitchTab("home")'><i class="bi bi-house-door"></i> الرئيسية</button></li>
-                <li class="nav-item"><button class="nav-link w-100 @(activeTab == "calculator" ? "active" : "")" @onclick='() => SwitchTab("calculator")'><i class="bi bi-calculator"></i> حاسبة التأثير</button></li>
-                <li class="nav-item"><button class="nav-link w-100 @(activeTab == "explorer" ? "active" : "")" @onclick='() => SwitchTab("explorer")'><i class="bi bi-journal-check"></i> دليل المجلات Q1-Q4</button></li>
+                <li class="nav-item"><button class="nav-link w-100 @(activeTab == "calculator" ? "active" : "")" @onclick='() => SwitchTab("calculator")'><i class="bi bi-calculator"></i> حاسبة h-index</button></li>
+                <li class="nav-item"><button class="nav-link w-100 @(activeTab == "explorer" ? "active" : "")" @onclick='() => SwitchTab("explorer")'><i class="bi bi-journal-check"></i> مكتبة المجلات</button></li>
                 <li class="nav-item"><button class="nav-link w-100 @(activeTab == "matcher" ? "active" : "")" @onclick='() => SwitchTab("matcher")'><i class="bi bi-bullseye"></i> مطابق المجلات</button></li>
-                <li class="nav-item"><button class="nav-link w-100 @(activeTab == "stats" ? "active" : "")" @onclick='() => SwitchTab("stats")'><i class="bi bi-bar-chart"></i> إحصائيات المنصة</button></li>
-                <li class="nav-item"><button class="nav-link w-100 @(activeTab == "guidelines" ? "active" : "")" @onclick='() => SwitchTab("guidelines")'><i class="bi bi-shield-check"></i> تفادي المجلات الوهمية</button></li>
-                <li class="nav-item"><button class="nav-link w-100 @(activeTab == "tracker" ? "active" : "")" @onclick='() => SwitchTab("tracker")'><i class="bi bi-kanban"></i> متابعة إنجاز الأبحاث</button></li>
+                <li class="nav-item"><button class="nav-link w-100 @(activeTab == "planner" ? "active" : "")" @onclick='() => SwitchTab("planner")'><i class="bi bi-diagram-3"></i> مولد خطة البحث</button></li>
+                <li class="nav-item"><button class="nav-link w-100 @(activeTab == "tracker" ? "active" : "")" @onclick='() => SwitchTab("tracker")'><i class="bi bi-kanban"></i> متابعة الأبحاث</button></li>
+                <li class="nav-item"><button class="nav-link w-100 @(activeTab == "checklist" ? "active" : "")" @onclick='() => SwitchTab("checklist")'><i class="bi bi-check2-square"></i> قائمة ما قبل النشر</button></li>
             </ul>
 
-            <!-- محتوى التبويبات -->
             <div class="tab-content">
 
-                <!-- 1. الرئيسية / لوحة القيادة -->
+                <!-- ================= 1. الرئيسية ================= -->
                 @if (activeTab == "home")
                 {
                     <div class="row g-4 animate__animated animate__fadeIn">
                         <div class="col-md-3">
                             <div class="card bg-primary text-white shadow border-0 rounded-4 h-100 p-3 position-relative overflow-hidden">
-                                <h6>إجمالي المجلات المتاحة</h6>
-                                <h3 class="fw-bold">@allJournals.Count</h3>
+                                <h6>مجلات في مكتبتك</h6>
+                                <h3 class="fw-bold">@journals.Count</h3>
                                 <i class="bi bi-journal-bookmark fs-1 opacity-25 position-absolute bottom-0 end-0 m-3"></i>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="card bg-success text-white shadow border-0 rounded-4 h-100 p-3 position-relative overflow-hidden">
-                                <h6>مجلات التصنيف الأول (Q1)</h6>
-                                <h3 class="fw-bold">@allJournals.Count(j => j.Quartile == "Q1")</h3>
-                                <i class="bi bi-trophy fs-1 opacity-25 position-absolute bottom-0 end-0 m-3"></i>
+                                <h6>أبحاث تتابعها</h6>
+                                <h3 class="fw-bold">@researchList.Count</h3>
+                                <i class="bi bi-kanban fs-1 opacity-25 position-absolute bottom-0 end-0 m-3"></i>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="card bg-warning text-dark shadow border-0 rounded-4 h-100 p-3 position-relative overflow-hidden">
-                                <h6>متوسط معامل التأثير</h6>
-                                <h3 class="fw-bold">@(allJournals.Any() ? allJournals.Average(j => j.ImpactFactor).ToString("F2") : "0.00")</h3>
-                                <i class="bi bi-graph-up-arrow fs-1 opacity-25 position-absolute bottom-0 end-0 m-3"></i>
+                                <h6>معايير مكتملة</h6>
+                                <h3 class="fw-bold">@checklist.Count(c => c.Done) / @checklist.Count</h3>
+                                <i class="bi bi-check2-circle fs-1 opacity-25 position-absolute bottom-0 end-0 m-3"></i>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="card bg-info text-white shadow border-0 rounded-4 h-100 p-3 position-relative overflow-hidden">
-                                <h6>التخصصات الأكاديمية</h6>
-                                <h3 class="fw-bold">@allJournals.Select(j => j.Field).Distinct().Count()</h3>
-                                <i class="bi bi-collection fs-1 opacity-25 position-absolute bottom-0 end-0 m-3"></i>
+                                <h6>آخر h-index محسوب</h6>
+                                <h3 class="fw-bold">@(lastHIndex?.ToString("F1") ?? "—")</h3>
+                                <i class="bi bi-graph-up-arrow fs-1 opacity-25 position-absolute bottom-0 end-0 m-3"></i>
                             </div>
                         </div>
-                        <div class="col-12 mt-4">
+
+                        <div class="col-12">
                             <div class="card shadow-sm border-0 rounded-4 p-4">
-                                <h5 class="fw-bold mb-3"><i class="bi bi-lightbulb text-primary"></i> دليل استخدام المنصة</h5>
-                                <p class="text-muted mb-0">تم إعداد هذه المنصة لدعم الباحثين في مختلف التخصصات العلمية والإنسانية. يمكنك استكشاف المجلات الرصينة، حساب مؤشرات الأداء، مقارنة دور النشر، والتأكد من موثوقية المجلات قبل الشروع في إرسال نتاجك العلمي.</p>
+                                <h5 class="fw-bold mb-3"><i class="bi bi-lightning-charge text-warning"></i> ابدأ من هنا</h5>
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <button class="btn btn-outline-primary w-100 p-3 text-start" @onclick='() => SwitchTab("calculator")'>
+                                            <i class="bi bi-calculator fs-4 d-block mb-2"></i>
+                                            <strong>احسب h-index</strong>
+                                            <div class="small text-muted">أدخل استشهاداتك واحصل على تصنيف Q</div>
+                                        </button>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button class="btn btn-outline-success w-100 p-3 text-start" @onclick='() => SwitchTab("matcher")'>
+                                            <i class="bi bi-bullseye fs-4 d-block mb-2"></i>
+                                            <strong>طابق مجلة</strong>
+                                            <div class="small text-muted">اقترح مجلات مناسبة لعنوان بحثك</div>
+                                        </button>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button class="btn btn-outline-info w-100 p-3 text-start" @onclick='() => SwitchTab("planner")'>
+                                            <i class="bi bi-diagram-3 fs-4 d-block mb-2"></i>
+                                            <strong>ولّد خطة بحث</strong>
+                                            <div class="small text-muted">هيكل أولي جاهز للتعديل</div>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 }
 
-                <!-- 2. حاسبة التأثير -->
+                <!-- ================= 2. حاسبة h-index ================= -->
                 @if (activeTab == "calculator")
                 {
                     <div class="card shadow-sm border-0 rounded-4 p-4 animate__animated animate__fadeIn">
-                        <h5 class="fw-bold text-success mb-3"><i class="bi bi-calculator"></i> حاسبة معامل التأثير والمؤشرات</h5>
-                        <p class="text-muted">قم بإدخال بيانات الاستشهادات والمقالات لحساب معامل التأثير التقريبي بدقة وسرعة.</p>
-                        <div class="row g-3 align-items-end">
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold">إجمالي الاستشهادات (Citations)</label>
-                                <input type="number" class="form-control form-control-lg" @bind="citations" placeholder="مثال: 250" />
+                        <h5 class="fw-bold text-success mb-3"><i class="bi bi-calculator"></i> حاسبة h-index و تصنيف Q</h5>
+                        <p class="text-muted">أدخل بياناتك واحصل على h-index تقريبي + تصنيف المجلة المتوقع + حفظ النتيجة.</p>
+
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">عدد المقالات</label>
+                                <input type="number" class="form-control" @bind="calcArticles" min="0" />
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold">إجمالي المقالات المنشورة (Articles)</label>
-                                <input type="number" class="form-control form-control-lg" @bind="articles" placeholder="مثال: 40" />
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">إجمالي الاستشهادات</label>
+                                <input type="number" class="form-control" @bind="calcCitations" min="0" />
                             </div>
-                            <div class="col-md-4">
-                                <button class="btn btn-success btn-lg w-100 shadow-sm" @onclick="CalculateImpactFactor">
-                                    <i class="bi bi-gear-fill"></i> احسب المؤشر
-                                </button>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">أعلى استشهادات لمقال</label>
+                                <input type="number" class="form-control" @bind="calcTopCitation" min="0" />
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button class="btn btn-success w-100" @onclick="CalculateHIndex"><i class="bi bi-gear-fill"></i> احسب</button>
                             </div>
                         </div>
-                        @if (impactFactor.HasValue)
+
+                        @if (lastHIndex.HasValue)
                         {
-                            <div class="alert alert-success mt-4 text-center shadow-sm animate__animated animate__zoomIn">
-                                <h4 class="mb-0">معامل التأثير المقدر: <strong class="fs-2">@impactFactor.Value.ToString("F2")</strong></h4>
+                            <div class="row g-3 mt-3 animate__animated animate__zoomIn">
+                                <div class="col-md-4">
+                                    <div class="card border-0 bg-success text-white text-center p-3 rounded-4">
+                                        <div class="small">h-index تقريبي</div>
+                                        <div class="fs-1 fw-bold">@lastHIndex.Value.ToString("F1")</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card border-0 bg-primary text-white text-center p-3 rounded-4">
+                                        <div class="small">تصنيف Q المتوقع</div>
+                                        <div class="fs-1 fw-bold">@predictedQuartile</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card border-0 bg-info text-white text-center p-3 rounded-4">
+                                        <div class="small">مستوى الباحث</div>
+                                        <div class="fs-4 fw-bold">@researcherLevel</div>
+                                    </div>
+                                </div>
                             </div>
                         }
+
+                        <div class="alert alert-light border mt-4 small text-muted mb-0">
+                            <i class="bi bi-info-circle"></i> h-index التقريبي = تقاطع عدد المقالات مع أعلى استشهاد. التصنيف Q تقديري بناءً على متوسط الاستشهادات.
+                        </div>
                     </div>
                 }
 
-                <!-- 3. مستكشف المجلات -->
+                <!-- ================= 3. مكتبة المجلات ================= -->
                 @if (activeTab == "explorer")
                 {
                     <div class="card shadow-sm border-0 rounded-4 p-4 animate__animated animate__fadeIn">
-                        <h5 class="fw-bold text-info mb-3"><i class="bi bi-journal-check"></i> دليل ومستكشف المجلات (Q1 - Q4)</h5>
-                        <div class="d-flex gap-2 mb-3 flex-wrap align-items-center">
-                            <button class="btn @(selectedQuartile == "All" ? "btn-secondary" : "btn-outline-secondary")" @onclick='() => FilterByQuartile("All")'>الكل</button>
-                            <button class="btn @(selectedQuartile == "Q1" ? "btn-success text-white" : "btn-outline-success")" @onclick='() => FilterByQuartile("Q1")'>Q1</button>
-                            <button class="btn @(selectedQuartile == "Q2" ? "btn-info text-white" : "btn-outline-info")" @onclick='() => FilterByQuartile("Q2")'>Q2</button>
-                            <button class="btn @(selectedQuartile == "Q3" ? "btn-warning text-dark" : "btn-outline-warning")" @onclick='() => FilterByQuartile("Q3")'>Q3</button>
-                            <button class="btn @(selectedQuartile == "Q4" ? "btn-secondary" : "btn-outline-secondary")" @onclick='() => FilterByQuartile("Q4")'>Q4</button>
-                            <input type="text" class="form-control w-25 ms-auto" @bind="searchQuery" @bind:event="oninput" placeholder="ابحث باسم المجلة أو التخصص..." />
+                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                            <h5 class="fw-bold text-info mb-0"><i class="bi bi-journal-check"></i> مكتبة المجلات الخاصة بك</h5>
+                            <button class="btn btn-sm btn-primary" @onclick='() => showAddJournal = !showAddJournal'>
+                                <i class="bi bi-plus-circle"></i> إضافة مجلة
+                            </button>
                         </div>
-                        <div class="table-responsive" style="max-height: 450px; overflow-y: auto;">
+
+                        @if (showAddJournal)
+                        {
+                            <div class="card bg-light border-0 p-3 mb-3 animate__animated animate__fadeIn">
+                                <div class="row g-2">
+                                    <div class="col-md-4"><input class="form-control" placeholder="اسم المجلة" @bind="newJournal.Title" /></div>
+                                    <div class="col-md-3"><input class="form-control" placeholder="التخصص" @bind="newJournal.Field" /></div>
+                                    <div class="col-md-2"><input class="form-control" placeholder="الناشر" @bind="newJournal.Publisher" /></div>
+                                    <div class="col-md-1">
+                                        <select class="form-select" @bind="newJournal.Quartile">
+                                            <option>Q1</option>
+                                            <option>Q2</option>
+                                            <option>Q3</option>
+                                            <option>Q4</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-1"><input type="number" step="0.1" class="form-control" placeholder="IF" @bind="newJournal.ImpactFactor" /></div>
+                                    <div class="col-md-1"><button class="btn btn-success w-100" @onclick="AddJournal"><i class="bi bi-check"></i></button></div>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="d-flex gap-2 mb-3 flex-wrap align-items-center">
+                            <button class="btn btn-sm @(selectedQuartile == "All" ? "btn-secondary" : "btn-outline-secondary")" @onclick='() => selectedQuartile = "All"'>الكل</button>
+                            <button class="btn btn-sm @(selectedQuartile == "Q1" ? "btn-success" : "btn-outline-success")" @onclick='() => selectedQuartile = "Q1"'>Q1</button>
+                            <button class="btn btn-sm @(selectedQuartile == "Q2" ? "btn-info" : "btn-outline-info")" @onclick='() => selectedQuartile = "Q2"'>Q2</button>
+                            <button class="btn btn-sm @(selectedQuartile == "Q3" ? "btn-warning" : "btn-outline-warning")" @onclick='() => selectedQuartile = "Q3"'>Q3</button>
+                            <button class="btn btn-sm @(selectedQuartile == "Q4" ? "btn-secondary" : "btn-outline-secondary")" @onclick='() => selectedQuartile = "Q4"'>Q4</button>
+                            <input class="form-control form-control-sm ms-auto" style="max-width:250px" placeholder="بحث..." @bind="searchQuery" @bind:event="oninput" />
+                            <select class="form-select form-select-sm" style="max-width:180px" @bind="sortBy">
+                                <option value="if-desc">IF (الأعلى)</option>
+                                <option value="if-asc">IF (الأدنى)</option>
+                                <option value="title">الاسم</option>
+                            </select>
+                        </div>
+
+                        <div class="table-responsive" style="max-height:480px; overflow-y:auto;">
                             <table class="table table-hover align-middle">
                                 <thead class="table-light sticky-top">
-                                    <tr>
-                                        <th>اسم المجلة</th>
-                                        <th>التخصص العام</th>
-                                        <th>دار النشر</th>
-                                        <th>الربع</th>
-                                        <th>معامل التأثير</th>
-                                        <th>قاعدة البيانات</th>
-                                    </tr>
+                                    <tr><th>المجلة</th><th>التخصص</th><th>الناشر</th><th>Q</th><th>IF</th><th></th></tr>
                                 </thead>
                                 <tbody>
-                                    @if (!FilteredJournalsList.Any())
+                                    @if (!FilteredJournals.Any())
                                     {
-                                        <tr><td colspan="6" class="text-center text-muted py-4">لا توجد نتائج مطابقة للبحث.</td></tr>
+                                        <tr><td colspan="6" class="text-center text-muted py-4">لا نتائج.</td></tr>
                                     }
-                                    @foreach (var j in FilteredJournalsList)
+                                    @foreach (var j in FilteredJournals)
                                     {
                                         <tr>
                                             <td class="fw-bold">@j.Title</td>
                                             <td><span class="badge bg-light text-dark border">@j.Field</span></td>
-                                            <td>@j.Publisher</td>
+                                            <td class="small text-muted">@j.Publisher</td>
                                             <td><span class="badge bg-@GetQuartileColor(j.Quartile)">@j.Quartile</span></td>
-                                            <td>@j.ImpactFactor</td>
-                                            <td>@j.Database</td>
+                                            <td>@j.ImpactFactor.ToString("F1")</td>
+                                            <td><button class="btn btn-sm btn-outline-danger" @onclick='() => RemoveJournal(j)'><i class="bi bi-trash"></i></button></td>
                                         </tr>
                                     }
                                 </tbody>
@@ -145,132 +220,160 @@
                     </div>
                 }
 
-                <!-- 4. مطابق المجلات -->
+                <!-- ================= 4. مطابق المجلات ================= -->
                 @if (activeTab == "matcher")
                 {
                     <div class="card shadow-sm border-0 rounded-4 p-4 animate__animated animate__fadeIn">
-                        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-bullseye"></i> مطابق المجلة المقترحة لعنوان البحث</h5>
-                        <p class="text-muted">اكتب الكلمات الرئيسية أو مجال بحثك وسنقوم بترشيح المجلات الأنسب لك.</p>
+                        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-bullseye"></i> مطابق ذكي للمجلات</h5>
+                        <p class="text-muted">اكتب عنوان بحثك أو كلماته المفتاحية — النظام يحسب نقاط توافق لكل مجلة ويرتبها.</p>
                         <div class="input-group mb-3">
-                            <input type="text" class="form-control form-control-lg" @bind="keywordInput" placeholder="مثال: علوم، بيئة، حاسبات، اقتصاد..." />
-                            <button class="btn btn-primary px-4" @onclick="AnalyzeKeywords"><i class="bi bi-search"></i> بحث وتطابق</button>
+                            <input class="form-control form-control-lg" @bind="keywordInput" placeholder="مثال: تعلم آلي، بيئة، اقتصاد..." />
+                            <button class="btn btn-primary px-4" @onclick="MatchJournals"><i class="bi bi-search"></i> طابق</button>
                         </div>
-                        @if (recommendedJournals != null && recommendedJournals.Any())
+                        @if (matchResults != null)
                         {
-                            <h6 class="fw-bold mt-4">المجلات المتوافقة مع اهتمامك:</h6>
-                            <div class="row g-3">
-                                @foreach (var j in recommendedJournals)
-                                {
-                                    <div class="col-md-4">
-                                        <div class="card border-0 shadow-sm h-100 p-3 bg-light">
-                                            <h6 class="fw-bold text-primary">@j.Title</h6>
-                                            <p class="small text-muted mb-1">التخصص: @j.Field</p>
-                                            <div class="mt-2">
-                                                <span class="badge bg-@GetQuartileColor(j.Quartile)">@j.Quartile</span>
-                                                <span class="badge bg-secondary">Impact: @j.ImpactFactor</span>
+                            if (!matchResults.Any())
+                            {
+                                <div class="alert alert-warning">لا توجد مجلات مطابقة. جرّب كلمة أخرى أو أضف مجلات لمكتبتك.</div>
+                            }
+                            else
+                            {
+                                <div class="row g-3">
+                                    @foreach (var m in matchResults)
+                                    {
+                                        <div class="col-md-6">
+                                            <div class="card border-0 shadow-sm p-3 h-100" style="border-right:4px solid @(m.Score >= 70 ? "#10B981" : m.Score >= 40 ? "#F59E0B" : "#94A3B8") !important;">
+                                                <div class="d-flex justify-content-between">
+                                                    <h6 class="fw-bold text-primary mb-1">@m.Journal.Title</h6>
+                                                    <span class="badge bg-@GetQuartileColor(m.Journal.Quartile)">@m.Journal.Quartile</span>
+                                                </div>
+                                                <div class="small text-muted mb-2">@m.Journal.Field · @m.Journal.Publisher</div>
+                                                <div class="progress" style="height:8px">
+                                                    <div class="progress-bar bg-success" style="width:@m.Score%"></div>
+                                                </div>
+                                                <div class="small mt-1 text-end fw-bold">توافق: @m.Score%</div>
                                             </div>
                                         </div>
-                                    </div>
-                                }
+                                    }
+                                </div>
+                            }
+                        }
+                    </div>
+                }
+
+                <!-- ================= 5. مولد خطة البحث ================= -->
+                @if (activeTab == "planner")
+                {
+                    <div class="card shadow-sm border-0 rounded-4 p-4 animate__animated animate__fadeIn">
+                        <h5 class="fw-bold text-secondary mb-3"><i class="bi bi-diagram-3"></i> مولد خطة البحث</h5>
+                        <p class="text-muted">أدخل عنوان البحث والتخصص، واحصل على هيكل أولي جاهز للتعديل والنسخ.</p>
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6"><input class="form-control" placeholder="عنوان البحث" @bind="planTitle" /></div>
+                            <div class="col-md-4">
+                                <select class="form-select" @bind="planField">
+                                    <option>علوم حاسوب</option>
+                                    <option>هندسة</option>
+                                    <option>طب</option>
+                                    <option>علوم اجتماعية</option>
+                                    <option>إدارة أعمال</option>
+                                    <option>تربية</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2"><button class="btn btn-secondary w-100" @onclick="GeneratePlan"><i class="bi bi-magic"></i> ولّد</button></div>
+                        </div>
+                        @if (generatedPlan != null)
+                        {
+                            <div class="bg-light p-3 rounded-3 animate__animated animate__fadeIn">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="fw-bold mb-0">@planTitle</h6>
+                                    <button class="btn btn-sm btn-outline-primary" @onclick="CopyPlan"><i class="bi bi-clipboard"></i> نسخ</button>
+                                </div>
+                                <pre class="mb-0" style="white-space:pre-wrap;font-family:inherit">@generatedPlan</pre>
                             </div>
                         }
                     </div>
                 }
 
-                <!-- 5. الإحصائيات -->
-                @if (activeTab == "stats")
-                {
-                    <div class="row g-4 animate__animated animate__fadeIn">
-                        <div class="col-md-6">
-                            <div class="card shadow-sm border-0 rounded-4 p-4 h-100">
-                                <h5 class="fw-bold text-primary mb-3">توزيع المجلات حسب الأرباع الأكاديمية</h5>
-                                <div style="position: relative; height: 300px;">
-                                    <canvas id="quartileChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card shadow-sm border-0 rounded-4 p-4 h-100">
-                                <h5 class="fw-bold text-success mb-3">أبرز دور النشر العالمية المعتمدة</h5>
-                                <div style="position: relative; height: 300px;">
-                                    <canvas id="publishersChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                }
-
-                <!-- 6. تفادي المجلات الوهمية -->
-                @if (activeTab == "guidelines")
-                {
-                    <div class="row g-4 animate__animated animate__fadeIn">
-                        <div class="col-md-6">
-                            <div class="card shadow-sm border-0 rounded-4 h-100 p-4 border-start border-success border-4">
-                                <h5 class="fw-bold text-success mb-3"><i class="bi bi-shield-fill-check"></i> معايير اختيار المجلات الرصينة</h5>
-                                <ul class="list-group list-group-flush">
-                                    <li class="list-group-item">التأكد من إدراج المجلة في مستوعبات Scopus أو Clarivate (ISI).</li>
-                                    <li class="list-group-item">فحص هيئة التحرير والتأكد من وجود أسماء أكاديمية حقيقية ومعروفة.</li>
-                                    <li class="list-group-item">شفافية أجور النشر ووجود سياسة واضحة لمراجعة الأقران (Peer Review).</li>
-                                    <li class="list-group-item">التأكد من عدم وجود المجلة في قوائم المجلات الوهمية والمفترسة (Beall's List سابقاً).</li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card shadow-sm border-0 rounded-4 h-100 p-4 border-start border-danger border-4">
-                                <h5 class="fw-bold text-danger mb-3"><i class="bi bi-exclamation-triangle-fill"></i> علامات تدل على المجلة الوهمية</h5>
-                                <ul class="list-group list-group-flush">
-                                    <li class="list-group-item">السرعة المبالغة في قبول ونشر الأبحاث (خلال أيام معدودة!).</li>
-                                    <li class="list-group-item">إرسال رسائل دعوة متكررة وغير مبررة للنشر البريدي الإلكتروني.</li>
-                                    <li class="list-group-item">استخدام معامل تأثير وهمي غير معتمد (مثل Fake Impact Factor).</li>
-                                    <li class="list-group-item">عدم وضوح عنوان دار النشر أو التواصل عبر بريد مجاني (Gmail/Yahoo).</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                }
-
-                <!-- 7. متتبع الأبحاث -->
+                <!-- ================= 6. متابعة الأبحاث ================= -->
                 @if (activeTab == "tracker")
                 {
                     <div class="card shadow-sm border-0 rounded-4 p-4 animate__animated animate__fadeIn">
-                        <h5 class="fw-bold text-secondary mb-3"><i class="bi bi-kanban"></i> لوحة متابعة حالة الأبحاث والأطروحات</h5>
-                        <p class="text-muted">سجل أبحاثك الحالية وتابع مراحل إنجازها ونشرها.</p>
+                        <h5 class="fw-bold text-secondary mb-3"><i class="bi bi-kanban"></i> متابعة الأبحاث</h5>
                         <div class="row g-2 mb-3">
-                            <div class="col-md-5">
-                                <input type="text" class="form-control" @bind="newResearchTitle" placeholder="عنوان البحث أو الدراسة" />
-                            </div>
-                            <div class="col-md-4">
-                                <select class="form-select" @bind="newResearchStatus">
-                                    <option value="مسودة وتحليل">مسودة وتحليل</option>
-                                    <option value="قيد المراجعة في المجلة">قيد المراجعة في المجلة</option>
-                                    <option value="مقبول للنشر">مقبول للنشر</option>
-                                    <option value="منشور رسمياً">منشور رسمياً</option>
+                            <div class="col-md-4"><input class="form-control" placeholder="عنوان البحث" @bind="newResearch.Title" /></div>
+                            <div class="col-md-3">
+                                <select class="form-select" @bind="newResearch.Status">
+                                    <option>فكرة</option>
+                                    <option>مسودة</option>
+                                    <option>قيد المراجعة</option>
+                                    <option>مقبول</option>
+                                    <option>منشور</option>
                                 </select>
                             </div>
-                            <div class="col-md-3">
-                                <button class="btn btn-primary w-100" @onclick="AddResearch"><i class="bi bi-plus-circle"></i> إضافة بحث جديد</button>
-                            </div>
+                            <div class="col-md-2"><input type="date" class="form-control" @bind="newResearch.Deadline" /></div>
+                            <div class="col-md-2"><input type="number" min="0" max="100" class="form-control" placeholder="% تقدم" @bind="newResearch.Progress" /></div>
+                            <div class="col-md-1"><button class="btn btn-primary w-100" @onclick="AddResearch"><i class="bi bi-plus"></i></button></div>
                         </div>
-                        <div class="table-responsive">
-                            <table class="table table-striped align-middle">
-                                <thead>
-                                    <tr><th>العنوان</th><th>الحالة الحالية</th><th>إجراء</th></tr>
-                                </thead>
-                                <tbody>
-                                    @if (!researchList.Any())
-                                    {
-                                        <tr><td colspan="3" class="text-center text-muted">لا توجد أبحاث مسجلة حتى الآن.</td></tr>
-                                    }
-                                    @foreach (var r in researchList)
-                                    {
-                                        <tr>
-                                            <td>@r.Title</td>
-                                            <td><span class="badge bg-@GetStatusColor(r.Status)">@r.Status</span></td>
-                                            <td><button class="btn btn-sm btn-outline-danger" @onclick='() => RemoveResearch(r)'><i class="bi bi-trash"></i></button></td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
+
+                        @if (!researchList.Any())
+                        {
+                            <div class="text-center text-muted py-4">لا أبحاث بعد. أضف أول بحث.</div>
+                        }
+                        else
+                        {
+                            @foreach (var r in researchList.OrderByDescending(x => x.CreatedAt))
+                            {
+                                <div class="card border-0 shadow-sm mb-2 p-3">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex align-items-center gap-2 mb-1">
+                                                <h6 class="fw-bold mb-0">@r.Title</h6>
+                                                <span class="badge bg-@GetStatusColor(r.Status)">@r.Status</span>
+                                                @if (r.Deadline.HasValue && r.Deadline < DateTime.Today && r.Progress < 100)
+                                                {
+                                                    <span class="badge bg-danger"><i class="bi bi-exclamation-triangle"></i> متأخر</span>
+                                                }
+                                            </div>
+                                            <div class="progress mb-1" style="height:8px">
+                                                <div class="progress-bar" style="width:@r.Progress%">@r.Progress%</div>
+                                            </div>
+                                            <div class="small text-muted">
+                                                <i class="bi bi-calendar"></i> @(r.Deadline?.ToString("yyyy-MM-dd") ?? "بدون موعد")
+                                                · أضيف: @r.CreatedAt.ToString("yyyy-MM-dd")
+                                            </div>
+                                        </div>
+                                        <div class="d-flex gap-1 ms-2">
+                                            <button class="btn btn-sm btn-outline-success" @onclick='() => AdvanceProgress(r)' title="+10%"><i class="bi bi-arrow-up"></i></button>
+                                            <button class="btn btn-sm btn-outline-danger" @onclick='() => RemoveResearch(r)'><i class="bi bi-trash"></i></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                }
+
+                <!-- ================= 7. قائمة ما قبل النشر ================= -->
+                @if (activeTab == "checklist")
+                {
+                    <div class="card shadow-sm border-0 rounded-4 p-4 animate__animated animate__fadeIn">
+                        <h5 class="fw-bold text-success mb-3"><i class="bi bi-check2-square"></i> قائمة التحقق قبل إرسال البحث</h5>
+                        <p class="text-muted">علّم كل معيار أنجزته. القائمة تُحفظ تلقائياً.</p>
+                        <div class="row g-2">
+                            @foreach (var item in checklist)
+                            {
+                                <div class="col-md-6">
+                                    <div class="form-check p-3 bg-light rounded-3">
+                                        <Component />
+                                        <label class="form-check-label" for="@item.Key">@item.Text</label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <div class="mt-3">
+                            <div class="progress" style="height:12px">
+                                <div class="progress-bar bg-success" style="width:@(ChecklistProgress)%">@ChecklistProgress%</div>
+                            </div>
                         </div>
                     </div>
                 }
@@ -282,161 +385,299 @@
 
 @code {
     private string activeTab = "home";
-    private List<JournalModel> allJournals = new();
-    private string searchQuery = "";
 
-    // خاص بحاسبة التأثير
-    private double? citations;
-    private double? articles;
-    private double? impactFactor;
-
-    // مستكشف المجلات
-    private string selectedQuartile = "All";
-
-    private IEnumerable<JournalModel> FilteredJournalsList => allJournals
-        .Where(j => (selectedQuartile == "All" || j.Quartile == selectedQuartile) &&
-                    (string.IsNullOrWhiteSpace(searchQuery) || j.Title.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) || j.Field.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)));
-
-    // مطابق المجلات
-    private string keywordInput = "";
-    private List<JournalModel>? recommendedJournals;
-
-    // متتبع الأبحاث
-    private string newResearchTitle = "";
-    private string newResearchStatus = "مسودة وتحليل";
+    // --- بيانات محفوظة ---
+    private List<JournalModel> journals = new();
     private List<ResearchItem> researchList = new();
+    private List<CheckItem> checklist = new();
+
+    // --- حاسبة ---
+    private int calcArticles;
+    private int calcCitations;
+    private int calcTopCitation;
+    private double? lastHIndex;
+    private string predictedQuartile = "-";
+    private string researcherLevel = "-";
+
+    // --- مستكشف ---
+    private string searchQuery = "";
+    private string selectedQuartile = "All";
+    private string sortBy = "if-desc";
+    private bool showAddJournal = false;
+    private JournalModel newJournal = new();
+
+    // --- مطابق ---
+    private string keywordInput = "";
+    private List<MatchResult>? matchResults;
+
+    // --- مولد خطة ---
+    private string planTitle = "";
+    private string planField = "علوم حاسوب";
+    private string? generatedPlan;
+
+    // --- متتبع ---
+    private ResearchItem newResearch = new() { Status = "فكرة", Progress = 0 };
 
     protected override async Task OnInitializedAsync()
     {
-        // بيانات نموذجية عامة تشمل مختلف التخصصات العلمية والإنسانية
-        allJournals = new List<JournalModel>
-        {
-            new JournalModel { Id = 1, Title = "Nature Biotechnology", Field = "العلوم الحيوية والتقنية", Publisher = "Springer Nature", Quartile = "Q1", ImpactFactor = 45.2, Database = "Scopus / ISI" },
-            new JournalModel { Id = 2, Title = "Journal of Animal Science and Biotechnology", Field = "العلوم الزراعية والإنتاج الحيواني", Publisher = "BioMed Central", Quartile = "Q1", ImpactFactor = 4.1, Database = "Scopus" },
-            new JournalModel { Id = 3, Title = "Computers and Electronics in Agriculture", Field = "الزراعة والتقنيات الذكية", Publisher = "Elsevier", Quartile = "Q1", ImpactFactor = 8.3, Database = "Scopus / ISI" },
-            new JournalModel { Id = 4, Title = "International Journal of Agricultural Sustainability", Field = "الاستدامة الزراعية", Publisher = "Taylor & Francis", Quartile = "Q1", ImpactFactor = 5.0, Database = "Scopus" },
-            new JournalModel { Id = 5, Title = "Livestock Science", Field = "إنتاج الحيوان", Publisher = "Elsevier", Quartile = "Q2", ImpactFactor = 2.3, Database = "Scopus" },
-            new JournalModel { Id = 6, Title = "Journal of Agricultural and Food Chemistry", Field = "الكيمياء والعلوم الغذائية", Publisher = "ACS Publications", Quartile = "Q1", ImpactFactor = 6.1, Database = "ISI" },
-            new JournalModel { Id = 7, Title = "Scientific Reports", Field = "علوم متعددة التخصصات", Publisher = "Springer Nature", Quartile = "Q1", ImpactFactor = 4.6, Database = "Scopus / ISI" },
-            new JournalModel { Id = 8, Title = "Egyptian Journal of Animal Production", Field = "الإنتاج الحيواني", Publisher = "جامعة عكاظ / محكمة", Quartile = "Q3", ImpactFactor = 1.1, Database = "Scopus" }
-        };
-
-        await Task.CompletedTask;
+        await LoadAll();
     }
 
-    private void SwitchTab(string tab)
+    // ==================== تحميل/حفظ ====================
+    private async Task LoadAll()
     {
-        activeTab = tab;
-        if (tab == "stats")
+        try
         {
-            _ = InvokeAsync(async () =>
+            var j = await JS.InvokeAsync<string>("localStorage.getItem", "rt_journals");
+            if (!string.IsNullOrEmpty(j)) journals = JsonSerializer.Deserialize<List<JournalModel>>(j) ?? new();
+
+            var r = await JS.InvokeAsync<string>("localStorage.getItem", "rt_research");
+            if (!string.IsNullOrEmpty(r)) researchList = JsonSerializer.Deserialize<List<ResearchItem>>(r) ?? new();
+
+            var c = await JS.InvokeAsync<string>("localStorage.getItem", "rt_checklist");
+            if (!string.IsNullOrEmpty(c)) checklist = JsonSerializer.Deserialize<List<CheckItem>>(c) ?? new();
+
+            var h = await JS.InvokeAsync<string>("localStorage.getItem", "rt_hindex");
+            if (double.TryParse(h, out var hv)) lastHIndex = hv;
+        }
+        catch { /* تجاهل */ }
+
+        if (!journals.Any()) journals = SeedJournals();
+        if (!checklist.Any()) checklist = SeedChecklist();
+    }
+
+    private async Task SaveJournals() => await JS.InvokeVoidAsync("localStorage.setItem", "rt_journals", JsonSerializer.Serialize(journals));
+    private async Task SaveResearch() => await JS.InvokeVoidAsync("localStorage.setItem", "rt_research", JsonSerializer.Serialize(researchList));
+    private async Task SaveChecklist() => await JS.InvokeVoidAsync("localStorage.setItem", "rt_checklist", JsonSerializer.Serialize(checklist));
+
+    // ==================== حاسبة h-index ====================
+    private async Task CalculateHIndex()
+    {
+        if (calcArticles <= 0) { lastHIndex = 0; return; }
+        double avg = (double)calcCitations / calcArticles;
+        double top = calcTopCitation > 0 ? calcTopCitation : avg;
+        lastHIndex = Math.Min(calcArticles, Math.Sqrt(avg * top));
+        predictedQuartile = avg >= 15 ? "Q1" : avg >= 8 ? "Q2" : avg >= 3 ? "Q3" : "Q4";
+        researcherLevel = lastHIndex >= 15 ? "باحث متميز" : lastHIndex >= 8 ? "باحث نشط" : lastHIndex >= 3 ? "باحث مبتدئ" : "طالب";
+        await JS.InvokeVoidAsync("localStorage.setItem", "rt_hindex", lastHIndex.Value.ToString("F2"));
+    }
+
+    // ==================== مكتبة المجلات ====================
+    private IEnumerable<JournalModel> FilteredJournals
+    {
+        get
+        {
+            var q = journals.Where(j =>
+                (selectedQuartile == "All" || j.Quartile == selectedQuartile) &&
+                (string.IsNullOrWhiteSpace(searchQuery) ||
+                 j.Title.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                 j.Field.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)));
+
+            return sortBy switch
             {
-                await Task.Delay(100);
-                await InitializeCharts();
-            });
+                "if-asc" => q.OrderBy(j => j.ImpactFactor),
+                "title" => q.OrderBy(j => j.Title),
+                _ => q.OrderByDescending(j => j.ImpactFactor)
+            };
         }
     }
 
-    private async Task InitializeCharts()
+    private async Task AddJournal()
     {
-        var quartileData = new int[] {
-            allJournals.Count(j => j.Quartile == "Q1"),
-            allJournals.Count(j => j.Quartile == "Q2"),
-            allJournals.Count(j => j.Quartile == "Q3"),
-            allJournals.Count(j => j.Quartile == "Q4")
+        if (string.IsNullOrWhiteSpace(newJournal.Title)) return;
+        newJournal.Id = journals.Any() ? journals.Max(x => x.Id) + 1 : 1;
+        journals.Add(newJournal);
+        newJournal = new();
+        showAddJournal = false;
+        await SaveJournals();
+    }
+
+    private async Task RemoveJournal(JournalModel j)
+    {
+        journals.Remove(j);
+        await SaveJournals();
+    }
+
+    // ==================== مطابق ====================
+    private void MatchJournals()
+    {
+        if (string.IsNullOrWhiteSpace(keywordInput)) { matchResults = new(); return; }
+        var terms = keywordInput.ToLower().Split(new[] { ' ', '،', ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+        matchResults = journals.Select(j =>
+        {
+            int score = 0;
+            var text = (j.Title + " " + j.Field).ToLower();
+            foreach (var t in terms)
+                if (text.Contains(t)) score += 40;
+            score += j.Quartile switch { "Q1" => 15, "Q2" => 10, "Q3" => 5, _ => 0 };
+            score += (int)Math.Min(20, j.ImpactFactor);
+            return new MatchResult { Journal = j, Score = Math.Min(100, score) };
+        })
+        .Where(m => m.Score > 0)
+        .OrderByDescending(m => m.Score)
+        .Take(8)
+        .ToList();
+    }
+
+    // ==================== مولد خطة ====================
+    private void GeneratePlan()
+    {
+        if (string.IsNullOrWhiteSpace(planTitle)) return;
+
+        var methods = planField switch
+        {
+            "علوم حاسوب" => "منهجية تجريبية (Experiment) + مقارنة خوارزميات + تحليل إحصائي",
+            "هندسة" => "تصميم نموذج أولي + اختبار أداء + تحليل نتائج",
+            "طب" => "دراسة حالة / تجربة سريرية + تحليل إحصائي + موافقات أخلاقية",
+            "علوم اجتماعية" => "منهج وصفي تحليلي + استبيان + تحليل SPSS",
+            "إدارة أعمال" => "دراسة حالة + مقابلات + تحليل SWOT",
+            "تربية" => "منهج شبه تجريبي + مجموعة ضابطة + اختبار قبلي/بعدي",
+            _ => "منهج وصفي تحليلي"
         };
 
-        var publishersGrouped = allJournals
-            .GroupBy(j => j.Publisher)
-            .Select(g => new { Name = g.Key, Count = g.Count() })
-            .OrderByDescending(g => g.Count)
-            .Take(5)
-            .ToList();
+        generatedPlan =
+$@"عنوان البحث: {planTitle}
+التخصص: {planField}
 
-        var pubNames = publishersGrouped.Select(p => p.Name).ToArray();
-        var pubCounts = publishersGrouped.Select(p => p.Count).ToArray();
+1. المقدمة
+   - مشكلة البحث وأهميتها
+   - الأسئلة والفرضيات
+   - أهداف الدراسة وحدودها
 
-        await JS.InvokeVoidAsync("renderCharts", quartileData, pubNames, pubCounts);
+2. الدراسات السابقة
+   - مراجعة أدبيات (2018-2024)
+   - الفجوة البحثية
+
+3. المنهجية
+   - {methods}
+   - أدوات جمع البيانات
+   - عينة الدراسة
+
+4. النتائج المتوقعة
+   - ما الذي ستثبته أو تنفيه الدراسة
+
+5. الخاتمة والتوصيات
+   - ملخص النتائج
+   - توصيات عملية
+   - أبحاث مستقبلية
+
+6. المراجع (نمط APA)
+   - 15-25 مرجعاً حديثاً";
     }
 
-    private void CalculateImpactFactor()
+    private async Task CopyPlan()
     {
-        if (citations.HasValue && articles.HasValue && articles.Value > 0)
-        {
-            impactFactor = citations.Value / articles.Value;
-        }
-        else
-        {
-            impactFactor = 0;
-        }
+        if (generatedPlan != null)
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", generatedPlan);
     }
 
-    private void FilterByQuartile(string quartile)
+    // ==================== متتبع ====================
+    private async Task AddResearch()
     {
-        selectedQuartile = quartile;
+        if (string.IsNullOrWhiteSpace(newResearch.Title)) return;
+        newResearch.CreatedAt = DateTime.Now;
+        researchList.Add(newResearch);
+        newResearch = new() { Status = "فكرة", Progress = 0 };
+        await SaveResearch();
     }
 
-    private void AnalyzeKeywords()
+    private async Task AdvanceProgress(ResearchItem r)
     {
-        if (string.IsNullOrWhiteSpace(keywordInput))
-        {
-            recommendedJournals = new List<JournalModel>();
-            return;
-        }
-        var term = keywordInput.Trim().ToLower();
-        recommendedJournals = allJournals.Where(j => j.Title.ToLower().Contains(term) || j.Field.ToLower().Contains(term)).ToList();
-
-        if (!recommendedJournals.Any())
-        {
-            recommendedJournals = allJournals.OrderByDescending(j => j.ImpactFactor).Take(3).ToList();
-        }
+        r.Progress = Math.Min(100, r.Progress + 10);
+        await SaveResearch();
     }
 
-    private void AddResearch()
+    private async Task RemoveResearch(ResearchItem r)
     {
-        if (!string.IsNullOrWhiteSpace(newResearchTitle))
-        {
-            researchList.Add(new ResearchItem { Title = newResearchTitle, Status = newResearchStatus });
-            newResearchTitle = "";
-        }
+        researchList.Remove(r);
+        await SaveResearch();
     }
 
-    private void RemoveResearch(ResearchItem item)
+    // ==================== قائمة ====================
+    private async Task ToggleCheck(CheckItem item, bool val)
     {
-        researchList.Remove(item);
+        item.Done = val;
+        await SaveChecklist();
     }
 
-    private string GetQuartileColor(string quartile) => quartile switch
+    private int ChecklistProgress => checklist.Count == 0 ? 0 : (int)(checklist.Count(c => c.Done) * 100.0 / checklist.Count);
+
+    // ==================== مساعدات ====================
+    private void SwitchTab(string tab) => activeTab = tab;
+
+    private string GetQuartileColor(string q) => q switch
     {
         "Q1" => "success",
         "Q2" => "info",
         "Q3" => "warning",
-        "Q4" => "secondary",
-        _ => "light"
-    };
-
-    private string GetStatusColor(string status) => status switch
-    {
-        "منشور رسمياً" => "success",
-        "مقبول للنشر" => "primary",
-        "قيد المراجعة في المجلة" => "warning",
         _ => "secondary"
     };
 
+    private string GetStatusColor(string s) => s switch
+    {
+        "منشور" => "success",
+        "مقبول" => "primary",
+        "قيد المراجعة" => "warning",
+        "مسودة" => "info",
+        _ => "secondary"
+    };
+
+    private List<JournalModel> SeedJournals() => new()
+    {
+        new() { Id = 1, Title = "Nature", Field = "علوم متعددة", Publisher = "Springer Nature", Quartile = "Q1", ImpactFactor = 64.8 },
+        new() { Id = 2, Title = "IEEE Transactions on Pattern Analysis", Field = "ذكاء اصطناعي", Publisher = "IEEE", Quartile = "Q1", ImpactFactor = 23.6 },
+        new() { Id = 3, Title = "The Lancet", Field = "طب", Publisher = "Elsevier", Quartile = "Q1", ImpactFactor = 168.9 },
+        new() { Id = 4, Title = "Scientific Reports", Field = "علوم متعددة", Publisher = "Springer Nature", Quartile = "Q1", ImpactFactor = 4.6 },
+        new() { Id = 5, Title = "Egyptian Journal of Animal Production", Field = "إنتاج حيواني", Publisher = "محلي", Quartile = "Q3", ImpactFactor = 1.1 },
+    };
+
+    private List<CheckItem> SeedChecklist() => new()
+    {
+        new() { Key = "c1", Text = "العنوان واضح ويصف البحث" },
+        new() { Key = "c2", Text = "الملخص ضمن 250 كلمة" },
+        new() { Key = "c3", Text = "الكلمات المفتاحية 4-6" },
+        new() { Key = "c4", Text = "المقدمة تحدد المشكلة والفجوة" },
+        new() { Key = "c5", Text = "المنهجية واضحة وقابلة للتكرار" },
+        new() { Key = "c6", Text = "النتائج مدعومة بجداول/أشكال" },
+        new() { Key = "c7", Text = "المناقشة تربط النتائج بالأدبيات" },
+        new() { Key = "c8", Text = "الخاتمة تلخص الإسهام" },
+        new() { Key = "c9", Text = "المراجع بنمط المجلة (APA/IEEE...)" },
+        new() { Key = "c10", Text = "لا انتحال — فحص Turnitin" },
+        new() { Key = "c11", Text = "الإفصاح عن تضارب المصالح" },
+        new() { Key = "c12", Text = "صيغة الملف PDF/Word حسب المجلة" },
+    };
+
+    // ==================== نماذج ====================
     public class JournalModel
     {
         public int Id { get; set; }
-        public string Title { get; set; } = string.Empty;
-        public string Field { get; set; } = string.Empty;
-        public string Publisher { get; set; } = string.Empty;
-        public string Quartile { get; set; } = string.Empty;
+        public string Title { get; set; } = "";
+        public string Field { get; set; } = "";
+        public string Publisher { get; set; } = "";
+        public string Quartile { get; set; } = "Q1";
         public double ImpactFactor { get; set; }
-        public string Database { get; set; } = string.Empty;
     }
 
     public class ResearchItem
     {
-        public string Title { get; set; } = string.Empty;
-        public string Status { get; set; } = string.Empty;
+        public string Title { get; set; } = "";
+        public string Status { get; set; } = "فكرة";
+        public int Progress { get; set; }
+        public DateTime? Deadline { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+    }
+
+    public class CheckItem
+    {
+        public string Key { get; set; } = "";
+        public string Text { get; set; } = "";
+        public bool Done { get; set; }
+    }
+
+    public class MatchResult
+    {
+        public JournalModel Journal { get; set; } = new();
+        public int Score { get; set; }
     }
 }

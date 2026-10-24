@@ -1,78 +1,473 @@
-﻿<div class="top-row ps-3 navbar navbar-dark custom-top-bar">
-    <div class="container-fluid d-flex align-items-center">
-        <a class="navbar-brand fw-bold" href="">
-            <i class="bi bi-journal-text me-2"></i> AI Journal Matcher
-        </a>
+﻿@inherits LayoutComponentBase
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+@inject AuthenticationStateProvider AuthProvider
 
-        <!-- زر القائمة للهواتف -->
-        <button title="Navigation menu" class="navbar-toggler ms-auto" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+<style>
+    /* الحاوية الرئيسية */
+    .app-wrapper {
+        display: flex;
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+        font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* القائمة الجانبية */
+    .sidebar {
+        width: 260px;
+        background: linear-gradient(180deg, #0F172A 0%, #1E293B 100%);
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        flex-shrink: 0;
+        box-shadow: -4px 0 15px rgba(0,0,0,0.1);
+        z-index: 1000;
+        border-left: 1px solid rgba(255,255,255,0.05);
+        position: relative;
+        transition: width 0.3s ease;
+    }
+
+        .sidebar.collapsed {
+            width: 80px;
+        }
+
+            .sidebar.collapsed .sidebar-header-text,
+            .sidebar.collapsed .nav-text,
+            .sidebar.collapsed .user-details-text {
+                display: none;
+            }
+
+            .sidebar.collapsed .nav-item {
+                justify-content: center;
+                padding: 12px 0;
+            }
+
+            .sidebar.collapsed .user-profile-btn {
+                justify-content: center;
+                padding: 10px 0;
+            }
+
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px 15px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .sidebar-header-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .sidebar-logo-icon {
+        background: linear-gradient(135deg, #6366F1, #8B5CF6);
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        font-size: 20px;
+        box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+        flex-shrink: 0;
+    }
+
+    .toggle-btn {
+        background: transparent;
+        border: none;
+        color: #94A3B8;
+        font-size: 20px;
+        cursor: pointer;
+        padding: 5px;
+        border-radius: 8px;
+        transition: 0.2s;
+    }
+
+        .toggle-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+    .sidebar-nav {
+        flex: 1;
+        padding: 10px 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+        .sidebar-nav::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .sidebar-nav::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 10px;
+        }
+
+    .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        color: #94A3B8;
+        text-decoration: none;
+        border-radius: 10px;
+        font-size: 14.5px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+    }
+
+        .nav-item i {
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #E2E8F0;
+            transform: translateX(-4px);
+        }
+
+            .nav-item:hover i {
+                color: #8B5CF6;
+            }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.15), transparent);
+            color: white;
+            border-right: 4px solid #6366F1;
+            border-radius: 10px 0 0 10px;
+        }
+
+            .nav-item.active i {
+                color: #818CF8;
+            }
+
+    .sidebar-footer {
+        padding: 15px;
+        border-top: 1px solid rgba(255,255,255,0.05);
+        background: rgba(0,0,0,0.2);
+        position: relative;
+    }
+
+    .user-profile-btn {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.08);
+        padding: 10px;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        color: white;
+    }
+
+        .user-profile-btn:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(139, 92, 246, 0.5);
+        }
+
+    .user-info-group {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6366F1, #A855F7);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 18px;
+        box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+        position: relative;
+        flex-shrink: 0;
+    }
+
+    .admin-badge {
+        position: absolute;
+        bottom: -2px;
+        right: -2px;
+        background: #10B981;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 2px solid #0F172A;
+    }
+
+    .user-details {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .user-name {
+        font-weight: 700;
+        font-size: 14px;
+        color: white;
+    }
+
+    .user-role {
+        font-size: 11px;
+        color: #10B981;
+        font-weight: 600;
+    }
+
+    .admin-dropdown {
+        position: absolute;
+        bottom: 80px;
+        left: 15px;
+        right: 15px;
+        background: #1E293B;
+        border: 1px solid #334155;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        animation: slideUp 0.2s ease-out;
+        z-index: 1001;
+    }
+
+    @@keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        color: #E2E8F0;
+        text-decoration: none;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        transition: 0.2s;
+        background: transparent;
+        border: none;
+        width: 100%;
+        cursor: pointer;
+        text-align: right;
+    }
+
+        .dropdown-item:hover {
+            background: rgba(255,255,255,0.05);
+            color: white;
+        }
+
+        .dropdown-item.danger {
+            color: #F87171;
+        }
+
+            .dropdown-item.danger:hover {
+                background: rgba(239, 68, 68, 0.1);
+            }
+
+    .dropdown-divider {
+        height: 1px;
+        background: #334155;
+        margin: 4px 0;
+    }
+
+    /* المحتوى الرئيسي */
+    .main-content {
+        flex: 1;
+        height: 100vh;
+        overflow-y: auto;
+        background-color: #F8FAFC;
+        color: #1E293B;
+        position: relative;
+        width: 100%;
+        padding: 25px;
+        box-sizing: border-box;
+    }
+
+        .main-content > * {
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        .main-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .main-content::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 10px;
+        }
+</style>
+
+<div class="app-wrapper">
+    <!-- القائمة الجانبية -->
+    <div class="sidebar @(isCollapsed ? "collapsed" : "")">
+        <div class="sidebar-header">
+            <div class="sidebar-header-left">
+                <div class="sidebar-logo-icon">🎓</div>
+                <div class="sidebar-header-text">
+                    <div style="font-weight: 800; font-size: 16px; color: white; letter-spacing: 0.5px;">AI Journal</div>
+                    <div style="font-size: 12px; color: #94A3B8; font-weight: 600;">Matcher System</div>
+                </div>
+            </div>
+            <button class="toggle-btn" @onclick="ToggleSidebar">
+                <i class="bi @(isCollapsed ? "bi-list" : "bi-list-nested")"></i>
+            </button>
+        </div>
+
+        <div class="sidebar-nav">
+            <NavLink class="nav-item" href="/" Match="NavLinkMatch.All">
+                <i class="bi bi-grid-1x2-fill"></i> <span class="nav-text">لوحة التحكم</span>
+            </NavLink>
+            <NavLink class="nav-item" href="/matcher">
+                <i class="bi bi-cpu-fill"></i> <span class="nav-text">المطابقة الذكية</span>
+            </NavLink>
+            <NavLink class="nav-item" href="/manage-journals">
+                <i class="bi bi-journals"></i> <span class="nav-text">إدارة المجلات</span>
+            </NavLink>
+            <NavLink class="nav-item" href="/manage-researchers">
+                <i class="bi bi-people-fill"></i> <span class="nav-text">إدارة الباحثين</span>
+            </NavLink>
+            <NavLink class="nav-item" href="ResearcherTools">
+                <i class="bi bi-tools"></i> <span class="nav-text">أدوات الباحث</span>
+            </NavLink>
+            <NavLink class="nav-item" href="/scientific-sites">
+                <i class="bi bi-globe2"></i> <span class="nav-text">المواقع العلمية</span>
+            </NavLink>
+            <NavLink class="nav-item" href="/conferences">
+                <i class="bi bi-calendar-event"></i> <span class="nav-text">المؤتمرات العلمية</span>
+            </NavLink>
+        </div>
+
+        <div class="sidebar-footer">
+            @if (showAdminMenu)
+            {
+                <div class="admin-dropdown">
+                    <div style="padding: 8px 12px; font-size: 11px; color: #94A3B8; font-weight: bold;">إدارة النظام</div>
+                    <a href="/admin" class="dropdown-item">
+                        <i class="bi bi-speedometer2" style="color: #8B5CF6;"></i> <span class="nav-text">لوحة التحكم الخاصة</span>
+                    </a>
+                    <a href="/settings" class="dropdown-item">
+                        <i class="bi bi-sliders" style="color: #3B82F6;"></i> <span class="nav-text">إعدادات المنصة</span>
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <button class="dropdown-item danger" @onclick="Logout">
+                        <i class="bi bi-box-arrow-right"></i> <span class="nav-text">تسجيل الخروج</span>
+                    </button>
+                </div>
+            }
+
+            <!-- الجزء الديناميكي لبيانات المستخدم -->
+            <button class="user-profile-btn" @onclick="ToggleAdminMenu">
+                <div class="user-info-group">
+                    <div class="user-avatar">
+                        @userInitial
+                        <div class="admin-badge"></div>
+                    </div>
+                    <div class="user-details user-details-text">
+                        <span class="user-name">@currentUserName</span>
+                        <span class="user-role"><i class="bi bi-shield-check"></i> @currentUserRole</span>
+                    </div>
+                </div>
+                <i class="bi @(showAdminMenu ? "bi-chevron-down" : "bi-chevron-up") user-details-text" style="color: #94A3B8; font-size: 12px;"></i>
+            </button>
+        </div>
     </div>
-</div>
 
-<div class="@NavMenuCssClass nav-scrollable custom-sidebar" @onclick="ToggleNavMenu">
-
-    <!-- قسم الترحيب / البروفايل -->
-    <div class="sidebar-profile px-4 py-4 text-center border-bottom border-secondary border-opacity-25">
-        <div class="avatar-circle mb-2 mx-auto">
-            <i class="bi bi-person-fill"></i>
-        </div>
-        <h6 class="text-white mb-0">مرحباً بك</h6>
-        <small class="text-muted">مدير النظام</small>
+    <!-- المحتوى الرئيسي -->
+    <div class="main-content">
+        @Body
     </div>
-
-    <!-- عناصر القائمة الرئيسية -->
-    <nav class="nav flex-column mt-3">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link custom-nav-link" href="" Match="NavLinkMatch.All">
-                <i class="bi bi-grid-1x2-fill me-2"></i> لوحة التحكم
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link custom-nav-link" href="counter">
-                <i class="bi bi-search me-2"></i> المطابقة الذكية
-            </NavLink>
-        </div>
-
-      
-        <div class="nav-item px-3">
-            <NavLink class="nav-link custom-nav-link" href="journals">
-                <i class="bi bi-list-ul me-2"></i> إدارة المجلات
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link custom-nav-link" href="researchers">
-                <i class="bi bi-people-fill me-2"></i> الباحثون
-            </NavLink>
-        </div>
-        <NavLink class="nav-link custom-nav-link" href="settings">
-            <i class="bi bi-gear-fill me-2"></i> الإعدادات
-        </NavLink>
-    </nav>
-   
-
-    <NavLink class="nav-item" href="/conferences">
-        <i class="bi bi-calendar-event"></i> المؤتمرات العلمية
-    </NavLink>
-    <!-- قسم الأسفل (زر تسجيل الخروج) -->
-    <div class="mt-auto px-3 pb-4">
-        <NavLink class="btn btn-danger w-100 fw-bold rounded-pill shadow-sm" href="login">
-            <i class="bi bi-box-arrow-right me-2"></i> تسجيل الخروج
-        </NavLink>
-    </div>
-
 </div>
 
 @code {
-    private bool collapseNavMenu = true;
+    private bool showAdminMenu = false;
+    private bool isCollapsed = false;
 
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    // --- متغيرات بيانات المستخدم الديناميكية ---
+    private string currentUserName = "زائر";
+    private string currentUserRole = "باحث";
+    private string userInitial = "U";
 
-    private void ToggleNavMenu()
+    protected override async Task OnInitializedAsync()
     {
-        collapseNavMenu = !collapseNavMenu;
+        try
+        {
+            // قراءة الاسم والصلاحية من localStorage (التي تم حفظها في Login.razor)
+            var storedName = await JS.InvokeAsync<string>("localStorage.getItem", "fullName");
+            var storedRole = await JS.InvokeAsync<string>("localStorage.getItem", "userRole");
+
+            if (!string.IsNullOrEmpty(storedName))
+            {
+                currentUserName = storedName;
+                currentUserRole = string.IsNullOrEmpty(storedRole) ? "باحث" : storedRole;
+                userInitial = currentUserName.Substring(0, 1).ToUpper();
+            }
+            else
+            {
+                // إذا لم يوجد في localStorage، نتحقق من المصادقة
+                var authState = await AuthProvider.GetAuthenticationStateAsync();
+                if (authState.User.Identity != null && authState.User.Identity.IsAuthenticated)
+                {
+                    currentUserName = authState.User.Identity.Name ?? "مستخدم";
+                    currentUserRole = "باحث";
+                    userInitial = currentUserName.Substring(0, 1).ToUpper();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error reading user data: {ex.Message}");
+        }
+    }
+
+    private void ToggleAdminMenu()
+    {
+        showAdminMenu = !showAdminMenu;
+    }
+
+    private void ToggleSidebar()
+    {
+        isCollapsed = !isCollapsed;
+        showAdminMenu = false;
+    }
+
+    private async Task Logout()
+    {
+        // مسح جميع البيانات عند تسجيل الخروج
+        await JS.InvokeVoidAsync("localStorage.removeItem", "authToken");
+        await JS.InvokeVoidAsync("localStorage.removeItem", "username");
+        await JS.InvokeVoidAsync("localStorage.removeItem", "userRole");
+        await JS.InvokeVoidAsync("localStorage.removeItem", "userId");
+        await JS.InvokeVoidAsync("localStorage.removeItem", "fullName");
+
+        if (AuthProvider is AIJOURNALMATCHERWEB.Services.CustomAuthenticationStateProvider customProvider)
+        {
+            customProvider.MarkUserAsLoggedOut();
+        }
+        Nav.NavigateTo("/login");
     }
 }
