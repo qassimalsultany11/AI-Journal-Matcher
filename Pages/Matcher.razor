@@ -3,6 +3,7 @@
 @using System.Text.RegularExpressions
 @inject HttpClient Http
 @inject NavigationManager Nav
+@inject IJSRuntime JS
 
 <PageTitle>المطابقة الذكية | AI Journal Matcher</PageTitle>
 
@@ -745,7 +746,7 @@
         return "#EF4444";
     }
 
-    private void RunMatch()
+    private async Task RunMatch()
     {
         if (string.IsNullOrWhiteSpace(abstractText)) { statusMessage = "الرجاء لصق مستخلص البحث أولاً."; return; }
         if (allJournals.Count == 0) { statusMessage = "لا توجد مجلات محملة."; return; }
@@ -753,13 +754,77 @@
         isMatching = true;
         statusMessage = "جاري تحليل النص...";
 
-        extractedKeywords = ExtractKeywords(abstractText);
-        matchedResults = ComputeMatches(extractedKeywords, abstractText);
+        await Task.Run(() =>
+        {
+            extractedKeywords = ExtractKeywords(abstractText);
+            matchedResults = ComputeMatches(extractedKeywords, abstractText);
+        });
 
-        if (matchedResults.Count > 0) selectedJournal = matchedResults.First();
+        if (matchedResults.Count > 0)
+            selectedJournal = matchedResults.First();
 
         statusMessage = $"تم العثور على {matchedResults.Count} مجلة.";
         isMatching = false;
+
+        // حفظ الجلسة في قاعدة البيانات (في الخلفية)
+        if (matchedResults.Count > 0)
+        {
+            var userName = await GetCurrentUserName();
+            _ = SaveMatchSession(userName, abstractText, extractedKeywords, matchedResults);
+        }
+    }
+
+    // دالة لجلب اسم المستخدم من الـ localStorage
+    private async Task<string> GetCurrentUserName()
+    {
+        try
+        {
+            var name = await JS.InvokeAsync<string>("localStorage.getItem", "fullName");
+            return string.IsNullOrEmpty(name) ? "مستخدم غير معروف" : name;
+        }
+        catch
+        {
+            return "زائر";
+        }
+    }
+
+    // دالة لحفظ جلسة المطابقة في Supabase
+    private async Task SaveMatchSession(string userName, string abstractText, List<string> keywords, List<MatchedJournal> results)
+    {
+        try
+        {
+            // تجهيز البيانات
+            var sessionData = new
+            {
+                user_name = userName,
+                abstract_text = abstractText,
+                extracted_keywords = keywords,
+                matched_journals = results.Select(r => new
+                {
+                    id = r.id,
+                    name = r.name,
+                    score = r.MatchScore,
+                    quartile = r.quartile
+                }).ToList()
+            };
+
+            var json = JsonSerializer.Serialize(sessionData);
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+            var request = new HttpRequestMessage(HttpMethod.Post, $"{supabaseUrl}/rest/v1/match_sessions");
+            request.Headers.Add("apikey", supabaseKey);
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
+
+            // Prefer: return=minimal تعني أننا لا نريد إرجاع البيانات بعد الحفظ (أسرع)
+            request.Headers.Add("Prefer", "return=minimal");
+            request.Content = content;
+
+            await Http.SendAsync(request);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error saving session: {ex.Message}");
+        }
     }
 
     private List<string> ExtractKeywords(string text)

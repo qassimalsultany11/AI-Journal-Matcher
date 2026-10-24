@@ -199,6 +199,52 @@
             transform: none;
             box-shadow: none;
         }
+
+    /* ستايلات الإحصائيات الجديدة */
+    .stat-card {
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        border: 1px solid #E2E8F0;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+
+    .stat-info h4 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 800;
+        color: #1E293B;
+    }
+
+    .stat-info p {
+        margin: 0;
+        font-size: 13px;
+        color: #64748B;
+        font-weight: 600;
+    }
+
+    .chart-container {
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        border: 1px solid #E2E8F0;
+        height: 350px;
+        position: relative;
+    }
 </style>
 
 <!-- شاشة تحميل -->
@@ -232,6 +278,11 @@ else
             <button style="background: @(activeTab == "import" ? "#6366F1" : "transparent"); color: @(activeTab == "import" ? "white" : "#64748B"); border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; white-space: nowrap;" @onclick='() => activeTab = "import"'>
                 <i class="bi bi-file-earmark-excel"></i> استيراد مجلات Scopus
             </button>
+            <!-- التاب الجديد للإحصائيات -->
+            <button style="background: @(activeTab == "stats" ? "#6366F1" : "transparent"); color: @(activeTab == "stats" ? "white" : "#64748B"); border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; white-space: nowrap;" @onclick="LoadStatsTab">
+                <i class="bi bi-graph-up-arrow"></i> إحصائيات المطابقة
+            </button>
+
             @if (currentUserRole == "developer")
             {
                 <button style="background: @(activeTab == "settings" ? "#6366F1" : "transparent"); color: @(activeTab == "settings" ? "white" : "#64748B"); border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; white-space: nowrap;" @onclick='() => activeTab = "settings"'>
@@ -401,7 +452,6 @@ else
                     <p style="color: #64748B; margin-top: 5px; font-size: 13px;">قم برفع ملف الإكسل، وحدد عدد المجلات، ثم ابدأ المزامنة يدوياً.</p>
                 </div>
 
-                <!-- حالة ما قبل اختيار الملف -->
                 @if (string.IsNullOrEmpty(currentFileName) && !isImporting)
                 {
                     <div style="border: 2px dashed #10B981; border-radius: 16px; padding: 50px 20px; text-align: center; background: #F0FDF4;">
@@ -418,7 +468,6 @@ else
                     </div>
                 }
 
-                <!-- حالة معاينة الملف بعد الاختيار -->
                 @if (!string.IsNullOrEmpty(currentFileName) && !isImporting)
                 {
                     <div style="background: #F8FAFC; border-radius: 12px; padding: 20px; border: 1px solid #E2E8F0;">
@@ -433,7 +482,6 @@ else
                             <span style="color: #64748B; font-size: 13px;">(الحد الأقصى: @totalRowsInFile مجلة)</span>
                         </div>
 
-                        <!-- معاينة أول 5 مجلات -->
                         <h4 style="font-size: 14px; color: #334155; margin-bottom: 10px;">معاينة أول 5 مجلات:</h4>
                         <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;">
                             <thead>
@@ -463,7 +511,6 @@ else
                     </div>
                 }
 
-                <!-- حالة جاري الاستيراد -->
                 @if (isImporting)
                 {
                     <div class="progress-container">
@@ -490,7 +537,6 @@ else
                     </div>
                 }
 
-                <!-- رسالة النتيجة -->
                 @if (!string.IsNullOrEmpty(importMessage))
                 {
                     <div style="margin-top: 25px; padding: 20px; border-radius: 12px; background: #DCFCE7; color: #166534; border: 1px solid #BBF7D0; font-weight: 600; display: flex; align-items: center; gap: 10px;">
@@ -501,7 +547,59 @@ else
             </div>
         }
 
-        <!-- التاب 4: إعدادات الواتساب -->
+        <!-- التاب 4: إحصائيات المطابقة (الجديد) -->
+        @if (activeTab == "stats")
+        {
+            <div style="margin-bottom: 25px;">
+                <h2 style="font-size: 18px; color: #1E293B; margin: 0 0 20px 0; border-right: 4px solid #6366F1; padding-right: 10px;">إحصائيات وتحليلات المطابقة</h2>
+
+                <!-- الكروت العلوية -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 25px;">
+                    <div class="stat-card" style="border-right: 4px solid #6366F1;">
+                        <div class="stat-icon" style="background: #EEF2FF; color: #6366F1;"><i class="bi bi-search"></i></div>
+                        <div class="stat-info">
+                            <h4>@matchSessions.Count</h4>
+                            <p>إجمالي عمليات المطابقة</p>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="border-right: 4px solid #10B981;">
+                        <div class="stat-icon" style="background: #DCFCE7; color: #10B981;"><i class="bi bi-people"></i></div>
+                        <div class="stat-info">
+                            <h4>@matchSessions.Select(s => s.user_name).Distinct().Count()</h4>
+                            <p>عدد الباحثين النشطين</p>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="border-right: 4px solid #F59E0B;">
+                        <div class="stat-icon" style="background: #FEF3C7; color: #F59E0B;"><i class="bi bi-journal-check"></i></div>
+                        <div class="stat-info">
+                            <h4>@MostMatchedJournal</h4>
+                            <p>المجلة الأكثر اقتراحاً</p>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="border-right: 4px solid #8B5CF6;">
+                        <div class="stat-icon" style="background: #F3E8FF; color: #8B5CF6;"><i class="bi bi-calendar3"></i></div>
+                        <div class="stat-info">
+                            <h4>@matchSessions.Count(s => s.created_at.Date == DateTime.Today)</h4>
+                            <p>عمليات مطابقة اليوم</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- الرسوم البيانية -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="chart-container">
+                        <h3 style="font-size: 15px; color: #475569; margin: 0 0 15px 0; font-weight: 700;">المجلات الأكثر اقتراحاً (Top 5)</h3>
+                        <canvas id="topJournalsChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3 style="font-size: 15px; color: #475569; margin: 0 0 15px 0; font-weight: 700;">الكلمات البحثية الأكثر استخداماً (Top 5)</h3>
+                        <canvas id="topKeywordsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- التاب 5: إعدادات الواتساب -->
         @if (activeTab == "settings" && currentUserRole == "developer")
         {
             <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #E2E8F0;">
@@ -563,13 +661,17 @@ else
     private string currentFileName = "";
     private int totalRowsInFile = 0;
     private List<PreviewJournal> previewJournals = new();
-    private List<JournalData> allParsedJournals = new(); // نخزن كل البيانات هنا بعد القراءة
+    private List<JournalData> allParsedJournals = new();
 
     // متغيرات الإعدادات
     private string whatsappInstanceId = "";
     private string whatsappToken = "";
     private string settingsMessage = "";
     private bool isSettingsSaved = false;
+
+    // متغيرات الإحصائيات
+    private List<MatchSession> matchSessions = new();
+    private string MostMatchedJournal = "لا يوجد";
 
     private string supabaseUrl = "https://dayowfmmqtoyewjgnptf.supabase.co";
     private string supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRheW93Zm1tcXRveWV3amducHRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwMTI4MTcsImV4cCI6MjEwNjU4ODgxN30.IcR-HI9AZOdsWyg93PURcm3riWzqzd7r0v69P0pzNTc";
@@ -644,6 +746,77 @@ else
         }
     }
 
+    // دالة تحميل الإحصائيات ورسم المخططات
+    private async Task LoadStatsTab()
+    {
+        activeTab = "stats";
+        await LoadMatchSessions();
+        await Task.Delay(100); // ننتظر حتى يتم رسم عناصر HTML للكانفاس
+        await DrawCharts();
+    }
+
+    private async Task LoadMatchSessions()
+    {
+        try
+        {
+            var req = new HttpRequestMessage(HttpMethod.Get, $"{supabaseUrl}/rest/v1/match_sessions?select=*&order=created_at.desc");
+            req.Headers.Add("apikey", supabaseKey);
+            req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
+            var res = await Http.SendAsync(req);
+
+            if (res.IsSuccessStatusCode)
+            {
+                var json = await res.Content.ReadAsStringAsync();
+                matchSessions = JsonSerializer.Deserialize<List<MatchSession>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
+
+                // استخراج المجلة الأكثر تكراراً
+                var allMatchedJournals = matchSessions
+                    .Where(s => s.matched_journals != null)
+                    .SelectMany(s => s.matched_journals)
+                    .Where(j => j != null)
+                    .GroupBy(j => j.name)
+                    .OrderByDescending(g => g.Count())
+                    .FirstOrDefault();
+
+                MostMatchedJournal = allMatchedJournals != null ? allMatchedJournals.Key : "لا يوجد";
+            }
+        }
+        catch (Exception ex) { Console.WriteLine(ex.Message); }
+    }
+
+    private async Task DrawCharts()
+    {
+        if (matchSessions.Count == 0) return;
+
+        // 1. تجهيز بيانات المجلات
+        var topJournals = matchSessions
+            .Where(s => s.matched_journals != null)
+            .SelectMany(s => s.matched_journals)
+            .Where(j => j != null)
+            .GroupBy(j => j.name)
+            .Select(g => new { Name = g.Key, Count = g.Count() })
+            .OrderByDescending(g => g.Count)
+            .Take(5)
+            .ToList();
+
+        // 2. تجهيز بيانات الكلمات المفتاحية
+        var topKeywords = matchSessions
+            .Where(s => s.extracted_keywords != null)
+            .SelectMany(s => s.extracted_keywords)
+            .Where(k => !string.IsNullOrWhiteSpace(k))
+            .GroupBy(k => k)
+            .Select(g => new { Keyword = g.Key, Count = g.Count() })
+            .OrderByDescending(g => g.Count)
+            .Take(5)
+            .ToList();
+
+        // استدعاء دالة الجافاسكربت لرسم المخططات
+        await JS.InvokeVoidAsync("renderAdminCharts",
+            topJournals.Select(j => j.Name).ToArray(), topJournals.Select(j => j.Count).ToArray(),
+            topKeywords.Select(k => k.Keyword).ToArray(), topKeywords.Select(k => k.Count).ToArray()
+        );
+    }
+
     private async Task LoadSettings()
     {
         settingsMessage = "";
@@ -659,7 +832,7 @@ else
             {
                 whatsappInstanceId = settings.FirstOrDefault(s => s.key == "whatsapp_instance_id")?.value ?? "";
                 whatsappToken = settings.FirstOrDefault(s => s.key == "whatsapp_token")?.value ?? "";
-                isSettingsSaved = true; // تعطيل زر الحفظ
+                isSettingsSaved = true;
             }
             else
             {
@@ -672,7 +845,6 @@ else
     {
         settingsMessage = "";
 
-        // التحقق المسبق لمنع التكرار
         var checkReq = new HttpRequestMessage(HttpMethod.Get, $"{supabaseUrl}/rest/v1/settings?select=id");
         checkReq.Headers.Add("apikey", supabaseKey);
         checkReq.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", supabaseKey);
@@ -690,7 +862,7 @@ else
         {
             await InsertSetting("whatsapp_instance_id", whatsappInstanceId);
             await InsertSetting("whatsapp_token", whatsappToken);
-            isSettingsSaved = true; // تعطيل الزر بعد الحفظ
+            isSettingsSaved = true;
             settingsMessage = "تم حفظ الإعدادات بنجاح! لن تتمكن من الحفظ مرة أخرى.";
         }
         catch (Exception ex)
@@ -712,7 +884,6 @@ else
         if (!response.IsSuccessStatusCode) { var err = await response.Content.ReadAsStringAsync(); throw new Exception(err); }
     }
 
-    // دوال الاستيراد الجديدة
     private async Task HandleFileSelected(InputFileChangeEventArgs e)
     {
         if (!await VerifyAdminBeforeAction()) { importMessage = "غير مصرح لك بهذا الإجراء."; return; }
@@ -751,7 +922,6 @@ else
 
             totalRowsInFile = worksheet.RowsUsed().Count() - 1;
 
-            // معاينة أول 5 مجلات
             foreach (var row in worksheet.RowsUsed().Skip(1).Take(5))
             {
                 var journalName = row.Cell(colName).GetString().Trim();
@@ -765,7 +935,6 @@ else
                 });
             }
 
-            // قراءة كل البيانات وتخزينها في الذاكرة (للاستخدام لاحقاً عند الضغط على زر البدء)
             foreach (var row in worksheet.RowsUsed().Skip(1))
             {
                 var journalName = row.Cell(colName).GetString().Trim();
@@ -879,7 +1048,6 @@ else
         if (!response.IsSuccessStatusCode) { var err = await response.Content.ReadAsStringAsync(); throw new Exception($"فشل إدخال دفعة: {err}"); }
     }
 
-    // ... باقي الدوال (VerifyAdminBeforeAction, ApproveAdmin, RejectAdmin, ChangeRole, ToggleSuspend, ExtendValidity, SendWhatsAppSuspensionMessage, UpdateUser) تبقى كما هي ...
     private async Task<bool> VerifyAdminBeforeAction()
     {
         try
@@ -1013,4 +1181,78 @@ else
     }
     public class PreviewJournal { public string Name { get; set; } = ""; public string Publisher { get; set; } = ""; public string Quartile { get; set; } = ""; }
     public class JournalData { public string Name { get; set; } = ""; public string Publisher { get; set; } = ""; public string Country { get; set; } = ""; public string Quartile { get; set; } = ""; public decimal? ImpactFactor { get; set; } public string WebsiteUrl { get; set; } = ""; public string Scope { get; set; } = ""; }
+
+    public class MatchSession
+    {
+        public long id { get; set; }
+        public string user_name { get; set; } = "";
+        public string abstract_text { get; set; } = "";
+        public List<string> extracted_keywords { get; set; } = new();
+        public List<MatchedJournalResult> matched_journals { get; set; } = new();
+        public DateTime created_at { get; set; }
+    }
+
+    public class MatchedJournalResult
+    {
+        public long id { get; set; }
+        public string name { get; set; } = "";
+        public int score { get; set; }
+        public string quartile { get; set; } = "";
+    }
 }
+
+@* سكربت لرسم المخططات البيانية في لوحة التحكم *@
+<script>
+    window.renderAdminCharts = (journalNames, journalCounts, keywordNames, keywordCounts) => {
+        // تدمير المخططات القديمة إذا وجدت لتجنب التداخل
+        if (window.topJournalsChartInstance) window.topJournalsChartInstance.destroy();
+        if (window.topKeywordsChartInstance) window.topKeywordsChartInstance.destroy();
+
+        // مخطط المجلات
+        const ctx1 = document.getElementById('topJournalsChart');
+        if (ctx1) {
+            window.topJournalsChartInstance = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: journalNames,
+                    datasets: [{
+                        label: 'عدد مرات الاقتراح',
+                        data: journalCounts,
+                        backgroundColor: 'rgba(99, 102, 241, 0.7)',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                }
+            });
+        }
+
+        // مخطط الكلمات المفتاحية
+        const ctx2 = document.getElementById('topKeywordsChart');
+        if (ctx2) {
+            window.topKeywordsChartInstance = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: keywordNames,
+                    datasets: [{
+                        data: keywordCounts,
+                        backgroundColor: [
+                            '#10B981', '#3B82F6', '#F59E0B', '#8B5CF6', '#EF4444'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } },
+                    cutout: '70%'
+                }
+            });
+        }
+    };
+</script>
